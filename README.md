@@ -46,7 +46,7 @@ Generate and modify websites in real-time using cutting-edge AI models!
 
 5. Start the development server:
    ```
-   npm start
+   node app.js
    ```
 
 6. Open your browser and visit `http://localhost:3000` to use the AI Website Generator.
