@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Time Website Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Real Time Website Builder</h1>
+    </header>
+    <div class="container">
+        <div class="input-section">
+            <div class="provider-selection">
+                <h2>SELECT PROVIDER AND MODEL</h2>
+                <select id="provider-select">
+                    <option value="google">Google</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="groq">Groq</option>
+                </select>
+                <select id="model-select"></select>
+            </div>
+            <div class="description-box">
+                <h2>WEBSITE DESCRIPTION</h2>
+                <textarea id="ai-prompt" placeholder="Enter your website description here..."></textarea>
+                <button id="generate-btn">Generate Website</button>
+            </div>
+            <div class="modify-box">
+                <h2>MODIFY WEBSITE</h2>
+                <textarea id="modify-prompt" placeholder="Enter modifications here..."></textarea>
+                <button id="modify-btn">Modify Website</button>
+            </div>
+            <div class="download-box">
+                <button id="download-btn">Download Website</button>
+            </div>
+        
+        </div>
+        <div class="preview-section">
+            <h2>LIVE PREVIEW</h2>
+            <iframe id="preview-frame"></iframe>
+        </div>
+    </div>
+    <div id="loading" class="hidden">Generating...</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="script.js"></script>
+    <footer>
+        <p>@by <a href="https://linkedin.com/in/shubharthaksangharsha" target="_blank" data-content="Visit my LinkedIn!">Shubharthak</a></p>
+    </footer>
+</body>
+</html>

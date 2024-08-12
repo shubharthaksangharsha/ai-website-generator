@@ -1,0 +1,174 @@
+body {
+    font-family: 'VT323', monospace;
+    background-color: #0a0a0a;
+    color: #00ff00;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    background-color: #000;
+    color: #8a2be2;
+    text-align: center;
+    padding: 10px 0;
+}
+
+h1, h2 {
+    margin: 0;
+}
+
+.container {
+    display: flex;
+    flex: 1;
+}
+
+.input-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    max-width: 45%;
+}
+
+.settings-box, .description-box, .modify-box {
+    background-color: #1a1a1a;
+    border: 1px solid #00ff00;
+    padding: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+textarea, select {
+    width: 90%;
+    background-color: #000;
+    color: #00ff00;
+    border: 1px solid #00ff00;
+    padding: 10px;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+textarea {
+    height: 100px;
+    resize: none;
+}
+
+select {
+    height: 40px;
+}
+
+button {
+    width: 90%;
+    background-color: #00ffff;
+    color: #000;
+    border: none;
+    padding: 10px;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #00cccc;
+}
+
+.preview-section {
+    flex: 1;
+    padding: 20px;
+    background-color: #1a1a1a;
+    border-left: 1px solid #00ff00;
+}
+
+#preview-frame {
+    width: 100%;
+    height: calc(100vh - 140px);
+    border: none;
+    background-color: #fff;
+}
+
+#loading {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #00ff00;
+    padding: 20px;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+.hidden {
+    display: none;
+}
+
+.download-box {
+    background-color: #1a1a1a;
+    border: 1px solid #00ff00;
+    padding: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+#download-btn {
+    width: 90%;
+    background-color: #8a2be2;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+#download-btn:hover {
+    background-color: #9932cc;
+}
+
+footer {
+    background-color: #000;
+    color: #00ff00;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px 0;
+    position: fixed;
+    height: 22px;
+    bottom: 0;
+    width: 100%;
+}
+
+
+footer a {
+    
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+footer a:hover {
+    transform: scale(1.2);
+}
+
+footer a::before {
+    content: attr(data-content);
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #8a2be2;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+footer a:hover::before {
+    opacity: 1;
+}
+
