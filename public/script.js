@@ -93,15 +93,9 @@ async function generateWebsite(prompt, isModify = false) {
 }
 
 function cleanGeneratedCode(code) {
-    // Remove any leading or trailing backticks
     code = code.replace(/^```|```$/g, '');
-    
-    // Remove any language specifiers like ```html or ```css
     code = code.replace(/```\w+\n/g, '');
-    
-    // Remove any <lang="en"> tags
     code = code.replace(/<lang="en">/g, '');
-    
     return code;
 }
 
@@ -132,7 +126,7 @@ function updatePreview(html) {
     html = html.replace(/^html/i, '');
 
     // Update the preview frame
-    previewFrame.srcdoc = `
+    const previewContent = `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -145,7 +139,11 @@ function updatePreview(html) {
         <script>${script}</script>
         </html>
     `;
+
+    // Use srcdoc to update the iframe content
+    previewFrame.srcdoc = previewContent;
 }
+
 async function downloadWebsite() {
     const zip = new JSZip();
     

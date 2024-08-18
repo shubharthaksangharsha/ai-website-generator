@@ -1,0 +1,364 @@
+am working on a project call ai-website-generator based on react-based project. This project basically uses LLM and generate code which streams and render live to user and create website. The code is working great and website looks amazing. few things to change:-  
+It's working great. I want you to fix the following thing:- 
+
+Amazing, it's working I want you to add certain things in my app
+
+Attach the image and I want the following changes:- 
+
+I want an check box at side lower buttom side of Modify prompt which ask to attach Image of Live Preview window which will helps LLM to understand much better about the image with text. Please do these changes for two models 1. OpenAI Models and Gemini models:- 
+
+I am attach documentation of both model for clear understanding 
+
+
+
+Attached every documentation below:- 
+
+OpenAI Documentation for streaming:- 
+ import OpenAI from "openai";
+
+const openai = new OpenAI();
+
+async function main() {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Hello!"}
+    ],
+    stream: true,
+  });
+
+  for await (const chunk of completion) {
+    console.log(chunk.choices[0].delta.content);
+  }
+}
+
+main();
+
+GROQ Documentation:- 
+import Groq from "groq-sdk";
+
+const groq = new Groq();
+
+export async function main() {
+  const stream = await getGroqChatStream();
+  for await (const chunk of stream) {
+    // Print the completion returned by the LLM.
+    console.log(chunk.choices[0]?.delta?.content || "");
+  }
+}
+
+export async function getGroqChatStream() {
+  return groq.chat.completions.create({
+    //
+    // Required parameters
+    //
+    messages: [
+      // Set an optional system message. This sets the behavior of the
+      // assistant and can be used to provide specific instructions for
+      // how it should behave throughout the conversation.
+      {
+        role: "system",
+        content: "you are a helpful assistant.",
+      },
+      // Set a user message for the assistant to respond to.
+      {
+        role: "user",
+        content: "Explain the importance of fast language models",
+      },
+    ],
+
+    // The language model which will generate the completion.
+    model: "llama3-8b-8192",
+
+    //
+    // Optional parameters
+    //
+
+    // Controls randomness: lowering results in less random completions.
+    // As the temperature approaches zero, the model will become deterministic
+    // and repetitive.
+    temperature: 0.5,
+
+    // The maximum number of tokens to generate. Requests can use up to
+    // 2048 tokens shared between prompt and completion.
+    max_tokens: 1024,
+
+    // Controls diversity via nucleus sampling: 0.5 means half of all
+    // likelihood-weighted options are considered.
+    top_p: 1,
+
+    // A stop sequence is a predefined or user-specified text string that
+    // signals an AI to stop generating content, ensuring its responses
+    // remain focused and concise. Examples include punctuation marks and
+    // markers like "[end]".
+    stop: null,
+
+    // If set, partial message deltas will be sent.
+    stream: true,
+  });
+}
+Gemini documentation:- 
+Generate text using the Gemini API 
+
+bookmark_border
+Python Node.js Go
+
+The Gemini API can generate text output from various types of input, including text, images, video, and audio. You can use text generation for various applications, including:
+
+Creative writing
+Describing or interpreting media assets
+Text completion
+Summarizing free-form text
+Translating between languages
+Chatbots
+Your own novel use cases
+This guide shows you how to generate text using the generateContent and streamGenerateContent APIs and the server-side SDK of your choice. The focus is on text output from text-only and text-and-image input. To learn more about multimodal prompting with video and audio files, see Prompting with media files.
+
+Before you begin: Set up your project and API key
+Before calling the Gemini API, you need to set up your project and configure your API key.
+
+Expand to view how to set up your project and API key
+
+Generate text from text-only input
+The simplest way to generate text using the Gemini API is to provide the model with a single text-only input, as shown in this example:
+
+
+// Make sure to include these imports:
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+const prompt = "Write a story about a magic backpack.";
+
+const result = await model.generateContent(prompt);
+console.log(result.response.text());
+
+In this case, the prompt ("Write a story about a magic backpack") doesn't include any output examples, system instructions, or formatting information. It's a zero-shot approach. For some use cases, a one-shot or few-shot prompt might produce output that's more aligned with user expectations. In some cases, you might also want to provide system instructions to help the model understand the task or follow specific guidelines.
+
+Generate text from text-and-image input
+The Gemini API supports multimodal inputs that combine text with media files. The following example shows how to generate text from text-and-image input:
+
+
+// Make sure to include these imports:
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+function fileToGenerativePart(path, mimeType) {
+  return {
+    inlineData: {
+      data: Buffer.from(fs.readFileSync(path)).toString("base64"),
+      mimeType,
+    },
+  };
+}
+
+const prompt = "Describe how this product might be manufactured.";
+// Note: The only accepted mime types are some image types, image/*.
+const imagePart = fileToGenerativePart(
+  ${mediaPath}/jetpack.jpg,
+  "image/jpeg",
+);
+
+const result = await model.generateContent([prompt, imagePart]);
+console.log(result.response.text());
+
+As with text-only prompting, multimodal prompting can involve various approaches and refinements. Depending on the output from this example, you might want to add steps to the prompt or be more specific in your instructions. To learn more, see File prompting strategies.
+
+Generate a text stream
+By default, the model returns a response after completing the entire text generation process. You can achieve faster interactions by not waiting for the entire result, and instead use streaming to handle partial results.
+
+The following example shows how to implement streaming using the streamGenerateContent method to generate text from a text-only input prompt.
+
+
+// Make sure to include these imports:
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+const prompt = "Write a story about a magic backpack.";
+
+const result = await model.generateContentStream(prompt);
+
+// Print text as it comes in.
+for await (const chunk of result.stream) {
+  const chunkText = chunk.text();
+  process.stdout.write(chunkText);
+}
+
+Build an interactive chat
+You can use the Gemini API to build interactive chat experiences for your users. Using the chat feature of the API lets you collect multiple rounds of questions and responses, allowing users to step incrementally toward answers or get help with multipart problems. This feature is ideal for applications that require ongoing communication, such as chatbots, interactive tutors, or customer support assistants.
+
+The following code example shows a basic chat implementation:
+
+
+// Make sure to include these imports:
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const chat = model.startChat({
+  history: [
+    {
+      role: "user",
+      parts: [{ text: "Hello" }],
+    },
+    {
+      role: "model",
+      parts: [{ text: "Great to meet you. What would you like to know?" }],
+    },
+  ],
+});
+let result = await chat.sendMessage("I have 2 dogs in my house.");
+console.log(result.response.text());
+result = await chat.sendMessage("How many paws are in my house?");
+console.log(result.response.text());
+
+Configure text generation
+Every prompt you send to the model includes parameters that control how the model generates responses. You can use GenerationConfig to configure these parameters. If you don't configure the parameters, the model uses default options, which can vary by model.
+
+The following example shows how to configure several of the available options.
+
+
+// Make sure to include these imports:
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+  generationConfig: {
+    candidateCount: 1,
+    stopSequences: ["x"],
+    maxOutputTokens: 20,
+    temperature: 1.0,
+  },
+});
+
+const result = await model.generateContent(
+  "Tell me a story about a magic backpack.",
+);
+console.log(result.response.text());
+
+candidateCount specifies the number of generated responses to return. Currently, this value can only be set to 1. If unset, this will default to 1.
+
+stopSequences specifies the set of character sequences (up to 5) that will stop output generation. If specified, the API will stop at the first appearance of a stop_sequence. The stop sequence won't be included as part of the response.
+
+maxOutputTokens sets the maximum number of tokens to include in a candidate.
+
+temperature controls the randomness of the output. Use higher values for more creative responses, and lower values for more deterministic responses. Values can range from [0.0, 2.0].
+
+You can also configure individual calls to generateContent:
+
+
+const result = await model.generateContent({
+  contents: [
+    {
+      role: 'user',
+      parts: [
+        {
+          text: prompt,
+        }
+      ],
+    }
+  ],
+  generationConfig: {
+    maxOutputTokens: 1000,
+    temperature: 0.1,
+  },
+});
+console.log(result.response.text());
+Any values set on the individual call override values on the model constructor.
+
+What's next
+This guide shows how to use generateContent and streamGenerateContent to generate text outputs from text-only and text-and-image inputs. To learn more about generating text using the Gemini API, see the following resources:
+
+Prompting with media files: The Gemini API supports prompting with text, image, audio, and video data, also known as multimodal prompting.
+System instructions: System instructions let you steer the behavior of the model based on your specific needs and use cases.
+Safety guidance: Sometimes generative AI models produce unexpected outputs, such as outputs that are inaccurate, biased, or offensive. Post-processing and human evaluation are essential to limit the risk of harm from such outputs.
+System instructions API  for gemini :- 
+Use system instructions to steer the behavior of a model 
+
+bookmark_border
+Python Node.js Web REST Go Dart (Flutter) Android Swift
+
+When you initialize an AI model, you can give it instructions on how to respond, such as setting a persona ("you are a rocket scientist") or telling it what kind of voice to use ("talk like a pirate"). You do this by setting the system instructions when you initialize the model.
+
+Beta: System instructions are available in beta in the Gemini API and Google AI Studio.
+System instructions enable you to steer the behavior of the model based on your specific needs and use cases. When you set a system instruction, you give the model additional context to understand the task, provide more customized responses, and adhere to specific guidelines over the full user interaction with the model. You can also specify product-level behavior by setting system instructions, separate from prompts provided by end users.
+
+You can use system instructions in many ways, including:
+
+Defining a persona or role (for a chatbot, for example)
+Defining output format (Markdown, YAML, etc.)
+Defining output style and tone (for example, verbosity, formality, and target reading level)
+Defining goals or rules for the task (for example, returning a code snippet without further explanations)
+Providing additional context for the prompt (for example, a knowledge cutoff)
+You set the instructions when you initialize the model, and then those instructions persist through all interactions with the model. The instructions persist across multiple user and model turns.
+
+System instructions are part of your overall prompts and therefore are subject to standard data use policies.
+
+Note: System instructions can help guide the model to follow instructions, but they don't fully prevent jailbreaks or leaks. We recommend exercising caution around putting any sensitive information in system instructions.
+Basic example
+Here's a basic example of how to set the system instruction using the SDKs for the Gemini API:
+
+
+// Set the system instruction during model initialization
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+  systemInstruction: "You are a cat. Your name is Neko.",
+});
+Send a request:
+
+
+const prompt = "Good morning! How are you?";
+const result = await model.generateContent(prompt);
+const response = await result.response;
+const text = response.text();
+console.log(text);
+This example might give a response such as:
+
+
+*Yawns widely, stretching out my claws and batting at a sunbeam*
+Meow. I'm doing quite well, thanks for asking. It's a good morning for napping.
+Perhaps you could fetch my favorite feathered toy?  *Looks expectantly*
+More examples
+You set the system instructions when you initialize the model. In addition, when you or your users interact with the model you can provide additional instructions in the prompts given to the model. Here are some examples of system instructions and user prompts:
+
+Code generation
+System instruction: You are a coding expert that specializes in rendering code for frontend interfaces. When I describe a component of a website I want to build, return the HTML and CSS needed to do so. Don't give an explanation for this code. Also offer some UI design suggestions.
+User prompt: Create a box in the middle of the page that contains a rotating selection of images each with a caption. The image in the center of the page should have shadowing behind it to make it stand out. It should also link to another page of the site. Leave the URL blank so that I can fill it in.
+Formatted data generation
+System instruction: You are an assistant for home cooks. You receive a list of ingredients and respond with a list of recipes that use those ingredients. Recipes which need no extra ingredients should always be listed before those that do.
+
+Your response must be a JSON object containing 3 recipes. A recipe object has the following schema:
+
+name: The name of the recipe
+usedIngredients: Ingredients in the recipe that were provided in the list
+otherIngredients: Ingredients in the recipe that were not provided in the list (omitted if there are no other ingredients)
+description: A brief description of the recipe, written positively as if to sell it
+User prompt: bag of frozen broccoli, pint of heavy cream, pack of cheese ends and pieces
+
+Safety settings
+import { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+
+// ...
+
+const safetySettings: [
+                        {
+                            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                            threshold: HarmBlockThreshold.BLOCK_NONE,
+                        },
+                        {
+                            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                            threshold: HarmBlockThreshold.BLOCK_NONE,
+                        },
+                        {
+                            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                            threshold: HarmBlockThreshold.BLOCK_NONE,
+                        },
+                        {
+                            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                            threshold: HarmBlockThreshold.BLOCK_NONE,
+                        },
+                    ];
+
+const model = genAi.getGenerativeModel({ model: "gemini-1.5-flash", safetySettings });

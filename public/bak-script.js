@@ -102,12 +102,6 @@ function cleanGeneratedCode(code) {
     // Remove any <lang="en"> tags
     code = code.replace(/<lang="en">/g, '');
     
-    // Handle CSS comments
-    code = code.replace(/css\/\*(.*?)\*\//g, '/* $1 */');
-    
-    // Handle CSS that starts with "css" followed by a space
-    code = code.replace(/^css\s/i, '');
-    
     return code;
 }
 
@@ -115,20 +109,16 @@ function updatePreview(html) {
     // Remove any surrounding HTML tags if present
     html = html.replace(/^\s*<html>|<\/html>\s*$/gi, '');
     html = html.replace(/^\s*<body>|<\/body>\s*$/gi, '');
-    
+
     // Extract style and script content
     let style = '';
     let script = '';
     const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/i);
-    const styleMatch2 = html.match(/\/\* style\.css \*\/([\s\S]*?)(?=<|$)/);
     const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
 
     if (styleMatch) {
         style = styleMatch[1];
         html = html.replace(styleMatch[0], '');
-    } else if (styleMatch2) {
-        style = styleMatch2[1];
-        html = html.replace(styleMatch2[0], '');
     }
     if (scriptMatch) {
         script = scriptMatch[1];
@@ -226,4 +216,3 @@ async function downloadWebsite() {
 generateBtn.addEventListener('click', () => generateWebsite(aiPrompt.value));
 modifyBtn.addEventListener('click', () => generateWebsite(modifyPrompt.value, true));
 downloadBtn.addEventListener('click', downloadWebsite);
-
