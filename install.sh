@@ -29,13 +29,6 @@ install_node_npm() {
   fi
 }
 
-# Clone the repository
-clone_repo() {
-  echo "Cloning the repository..."
-  git clone https://github.com/your-username/ai-website-generator.git
-  cd ai-website-generator || exit
-  echo "Repository cloned successfully."
-}
 
 # Install dependencies
 install_dependencies() {
@@ -69,7 +62,6 @@ start_server() {
 
 # Execute the functions
 install_node_npm
-clone_repo
 install_dependencies
 create_env_file
 start_server
