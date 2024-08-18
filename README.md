@@ -32,9 +32,10 @@ Generate and modify websites in real-time using cutting-edge AI models!
    cd ai-website-generator
    ```
 
-3. Install dependencies:
+3. Run the script:
    ```
-   npm install
+   chmod +x install.sh (Make sure you have the permission)
+   bash install.sh
    ```
 
 4. Create a `.env` file in the root directory and add your API keys:
