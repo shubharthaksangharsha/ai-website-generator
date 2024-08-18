@@ -62,7 +62,6 @@ async function generateWebsiteCode(provider, model, prompt) {
 async function generateGoogleWebsiteCode(model, prompt) {
   const googleModel = genAI.getGenerativeModel({ 
     model: model,
-    systemInstruction:systemPrompt,
     safetySettings: [
       {
         category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -85,6 +84,10 @@ async function generateGoogleWebsiteCode(model, prompt) {
 
   const chat = googleModel.startChat({
     history: [
+      {
+        role: "user",
+        parts: [{ text: prompt }],
+      },
       {
         role: "model",
         parts: [{ text: "Understood. I'm ready to generate website code based on user descriptions. I'll provide clean, valid HTML, CSS, and JavaScript code without any explanations or markdown formatting." }],
