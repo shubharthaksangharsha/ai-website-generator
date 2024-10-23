@@ -14,6 +14,8 @@ const imageStatus = document.getElementById('image-status');
 let currentWebsiteCode = '';
 let models = [];
 let uploadedImages = [];
+let versionHistory = [];
+let currentVersionIndex = -1;
 
 async function fetchModels() {
     const response = await fetch('/models');
@@ -86,6 +88,17 @@ async function generateWebsite(prompt, isModify = false) {
         }
 
         currentWebsiteCode = accumulatedHtml;
+        
+        // Add new version to history
+        versionHistory.push({
+            code: accumulatedHtml,
+            timestamp: new Date(),
+            prompt: prompt
+        });
+        currentVersionIndex = versionHistory.length - 1;
+        
+        // Update navigation UI
+        updateVersionNavigation();
     } catch (error) {
         console.error('Error:', error);
     } finally {
@@ -404,3 +417,61 @@ function showNotification(message) {
         notification.remove();
     }, 3000);
 }
+
+// Add these new functions
+function updateVersionNavigation() {
+    const previewSection = document.querySelector('.preview-section');
+    if (!previewSection.querySelector('.version-navigation')) {
+        // Add navigation controls if they don't exist
+        const navigation = document.createElement('div');
+        navigation.className = 'version-navigation';
+        navigation.innerHTML = `
+            <button class="nav-btn prev-btn" title="Previous Version (←)">←</button>
+            <span class="version-info"></span>
+            <button class="nav-btn next-btn" title="Next Version (→)">→</button>
+        `;
+        previewSection.insertBefore(navigation, previewFrame);
+        
+        // Add click handlers
+        navigation.querySelector('.prev-btn').addEventListener('click', () => navigateVersion(-1));
+        navigation.querySelector('.next-btn').addEventListener('click', () => navigateVersion(1));
+    }
+    
+    updateVersionInfo();
+}
+
+function updateVersionInfo() {
+    const versionInfo = document.querySelector('.version-info');
+    if (versionHistory.length > 0) {
+        versionInfo.textContent = `Version ${currentVersionIndex + 1} of ${versionHistory.length}`;
+    } else {
+        versionInfo.textContent = 'No versions';
+    }
+    
+    // Update button states
+    const prevBtn = document.querySelector('.prev-btn');
+    const nextBtn = document.querySelector('.next-btn');
+    prevBtn.disabled = currentVersionIndex <= 0;
+    nextBtn.disabled = currentVersionIndex >= versionHistory.length - 1;
+}
+
+function navigateVersion(delta) {
+    const newIndex = currentVersionIndex + delta;
+    if (newIndex >= 0 && newIndex < versionHistory.length) {
+        currentVersionIndex = newIndex;
+        const version = versionHistory[currentVersionIndex];
+        updatePreview(version.code);
+        updateVersionInfo();
+    }
+}
+
+// Add keyboard navigation
+document.addEventListener('keydown', (event) => {
+    if (event.target.tagName === 'TEXTAREA') return; // Ignore when typing in textareas
+    
+    if (event.key === 'ArrowLeft') {
+        navigateVersion(-1);
+    } else if (event.key === 'ArrowRight') {
+        navigateVersion(1);
+    }
+});
