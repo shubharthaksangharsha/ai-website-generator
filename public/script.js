@@ -346,3 +346,61 @@ modelSelect.addEventListener('change', () => {
     }
   }
 });
+
+// Add event listener for clipboard paste
+document.addEventListener('paste', async (event) => {
+    // Check if image upload is supported for current provider
+    const provider = providerSelect.value;
+    const model = modelSelect.value;
+    const isSupported = provider === 'google' || provider === 'openai' || 
+        (provider === 'groq' && (model.includes('vision') || model.includes('llava')));
+    
+    if (!isSupported) return;
+
+    const items = event.clipboardData.items;
+    let imageFile = null;
+
+    // Look for an image in the clipboard data
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            imageFile = items[i].getAsFile();
+            break;
+        }
+    }
+
+    if (imageFile) {
+        // Create a File object with a proper name
+        const file = new File([imageFile], `pasted-image-${Date.now()}.png`, {
+            type: imageFile.type
+        });
+
+        // Handle based on provider
+        if (provider === 'groq') {
+            // Groq only supports one image
+            uploadedImages = [file];
+        } else {
+            // Other providers support multiple images
+            uploadedImages.push(file);
+        }
+
+        // Update UI
+        updateImagePreviews();
+        updateImageUploadStatus();
+
+        // Show a notification
+        showNotification('Image pasted successfully!');
+    }
+});
+
+// Add this helper function for notifications
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'paste-notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    // Remove notification after animation
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
