@@ -7,9 +7,13 @@ const loading = document.getElementById('loading');
 const providerSelect = document.getElementById('provider-select');
 const modelSelect = document.getElementById('model-select');
 const downloadBtn = document.getElementById('download-btn');
+const referenceImages = document.getElementById('reference-images');
+const imagesPreviewContainer = document.getElementById('images-preview-container');
+const imageStatus = document.getElementById('image-status');
 
 let currentWebsiteCode = '';
-let models = {};
+let models = [];
+let uploadedImages = [];
 
 async function fetchModels() {
     const response = await fetch('/models');
@@ -41,24 +45,23 @@ async function generateWebsite(prompt, isModify = false) {
     generateBtn.disabled = true;
     modifyBtn.disabled = true;
 
-    const endpoint = isModify ? '/modify' : '/generate';
-    const body = {
-        prompt: prompt,
-        provider: providerSelect.value,
-        model: modelSelect.value,
-    };
+    const formData = new FormData();
+    formData.append('prompt', prompt);
+    formData.append('provider', providerSelect.value);
+    formData.append('model', modelSelect.value);
 
     if (isModify) {
-        body.currentCode = currentWebsiteCode;
+        formData.append('currentCode', currentWebsiteCode);
     }
 
+    uploadedImages.forEach(file => {
+        formData.append('images', file);
+    });
+
     try {
-        const response = await fetch(endpoint, {
+        const response = await fetch(isModify ? '/modify' : '/generate', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
+            body: formData
         });
 
         const reader = response.body.getReader();
@@ -93,39 +96,56 @@ async function generateWebsite(prompt, isModify = false) {
 }
 
 function cleanGeneratedCode(code) {
-    code = code.replace(/^```|```$/g, '');
-    code = code.replace(/```\w+\n/g, '');
-    code = code.replace(/<lang="en">/g, '');
+    // Remove code block markers
+    code = code.replace(/```\w*\n?/g, '');
+    
+    // Remove language tags
+    code = code.replace(/<lang="[^"]*">/g, '');
+    
+    // Remove any leading/trailing whitespace
+    code = code.trim();
+    
+    // Ensure style and script tags are properly formatted
+    code = code.replace(/<style>\s*{/g, '<style>');
+    code = code.replace(/}\s*<\/style>/g, '</style>');
+    
     return code;
 }
 
 function updatePreview(html) {
-    // Remove any surrounding HTML tags if present
-    html = html.replace(/^\s*<html>|<\/html>\s*$/gi, '');
-    html = html.replace(/^\s*<body>|<\/body>\s*$/gi, '');
+    // Clean up any markdown code block syntax
+    html = html.replace(/```html|```css|```javascript|```/g, '');
 
     // Extract style and script content
     let style = '';
     let script = '';
-    const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/i);
-    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
+    let mainHtml = html;
 
-    if (styleMatch) {
-        style = styleMatch[1];
-        html = html.replace(styleMatch[0], '');
+    // Extract CSS
+    const styleMatches = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+    if (styleMatches) {
+        styleMatches.forEach(match => {
+            style += match.replace(/<\/?style[^>]*>/g, '') + '\n';
+            mainHtml = mainHtml.replace(match, '');
+        });
     }
-    if (scriptMatch) {
-        script = scriptMatch[1];
-        html = html.replace(scriptMatch[0], '');
+
+    // Extract JavaScript
+    const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+    if (scriptMatches) {
+        scriptMatches.forEach(match => {
+            script += match.replace(/<\/?script[^>]*>/g, '') + '\n';
+            mainHtml = mainHtml.replace(match, '');
+        });
     }
 
     // Clean up any remaining HTML, head, or body tags
-    html = html.replace(/<\/?html>|<\/?head>|<\/?body>/gi, '');
+    mainHtml = mainHtml.replace(/^\s*<html[^>]*>|<\/html>\s*$/gi, '');
+    mainHtml = mainHtml.replace(/^\s*<body[^>]*>|<\/body>\s*$/gi, '');
+    mainHtml = mainHtml.replace(/^\s*<head[^>]*>|<\/head>\s*$/gi, '');
+    mainHtml = mainHtml.replace(/^html/i, '');
 
-    // Remove any leading "html" text
-    html = html.replace(/^html/i, '');
-
-    // Update the preview frame
+    // Create a complete HTML document
     const previewContent = `
         <!DOCTYPE html>
         <html lang="en">
@@ -133,14 +153,34 @@ function updatePreview(html) {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Preview</title>
-            <style>${style}</style>
+            <style>
+                /* Reset default styles */
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                
+                /* Add your extracted styles */
+                ${style}
+            </style>
         </head>
-        <body>${html}</body>
-        <script>${script}</script>
+        <body>
+            ${mainHtml}
+            <script>
+                // Wrap in try-catch to prevent errors from breaking the preview
+                try {
+                    ${script}
+                } catch (error) {
+                    console.error('Preview script error:', error);
+                }
+            </script>
+        </body>
         </html>
     `;
 
-    // Use srcdoc to update the iframe content
+    // Update the iframe content
+    const previewFrame = document.getElementById('preview-frame');
     previewFrame.srcdoc = previewContent;
 }
 
@@ -167,37 +207,38 @@ async function downloadWebsite() {
     }
     
     // Clean up the HTML content
-    htmlContent = htmlContent.replace(/^\s*<html>|<\/html>\s*$/gi, '');
-    htmlContent = htmlContent.replace(/^\s*<body>|<\/body>\s*$/gi, '');
-    htmlContent = htmlContent.replace(/<\/?html>|<\/?head>|<\/?body>/gi, '');
+    htmlContent = htmlContent
+        .replace(/^\s*<html[^>]*>|<\/html>\s*$/gi, '')
+        .replace(/^\s*<body[^>]*>|<\/body>\s*$/gi, '')
+        .replace(/^\s*<head[^>]*>|<\/head>\s*$/gi, '')
+        .replace(/^html/i, '')
+        .replace(/^\s+|\s+$/g, ''); // Remove leading/trailing whitespace
     
-    // Create the final HTML file
-    const finalHtml = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Generated Website</title>
-            <link rel="stylesheet" href="styles.css">
-        </head>
-        <body>
-            ${htmlContent}
-            <script src="script.js"></script>
-        </body>
-        </html>
-    `;
+    // Create the final HTML file with proper DOCTYPE and structure
+    const finalHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Website</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    ${htmlContent}
+    <script src="script.js"></script>
+</body>
+</html>`;
     
     zip.file("index.html", finalHtml);
     
     // Add CSS file
     if (style) {
-        zip.file("styles.css", style);
+        zip.file("styles.css", style.trim());
     }
     
     // Add JS file
     if (script) {
-        zip.file("script.js", script);
+        zip.file("script.js", script.trim());
     }
     
     // Generate the zip file
@@ -211,6 +252,97 @@ async function downloadWebsite() {
     saveAs(content, `${filename}.zip`);
 }
 
+function handleImageUpload(event) {
+    const files = event.target.files;
+    if (!files.length) return;
+
+    if (providerSelect.value === 'groq') {
+    uploadedImages = [files[0]];
+    } else {
+    uploadedImages = Array.from(files);
+  }
+    updateImagePreviews();
+    updateImageUploadStatus();
+}
+
+function updateImagePreviews() {
+    imagesPreviewContainer.innerHTML = '';
+    
+    uploadedImages.forEach((file, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-preview-wrapper';
+
+        const img = document.createElement('img');
+        img.className = 'image-preview-item';
+        img.src = URL.createObjectURL(file);
+        img.alt = `Preview ${index + 1}`;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-image-btn';
+        removeBtn.innerHTML = '×';
+        removeBtn.onclick = () => removeImage(index);
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(removeBtn);
+        imagesPreviewContainer.appendChild(wrapper);
+    });
+
+    imagesPreviewContainer.classList.toggle('hidden', uploadedImages.length === 0);
+}
+
+function removeImage(index) {
+    uploadedImages.splice(index, 1);
+    updateImagePreviews();
+    updateImageUploadStatus();
+}
+
+function updateImageUploadStatus() {
+    const count = uploadedImages.length;
+    imageStatus.textContent = count ? `${count} image${count > 1 ? 's' : ''} selected` : '';
+}
+
 generateBtn.addEventListener('click', () => generateWebsite(aiPrompt.value));
 modifyBtn.addEventListener('click', () => generateWebsite(modifyPrompt.value, true));
 downloadBtn.addEventListener('click', downloadWebsite);
+
+referenceImages.addEventListener('change', handleImageUpload);
+
+providerSelect.addEventListener('change', () => {
+    const provider = providerSelect.value;
+    const imageUploadContainer = document.querySelector('.image-upload-container');
+    const isSupported = provider === 'google' || provider === 'openai'|| 
+    (provider === 'groq' && (model.includes('vision') || model.includes('llava')));
+  
+    
+    imageUploadContainer.classList.toggle('disabled', !isSupported);
+    referenceImages.disabled = !isSupported;
+    if (provider === 'groq') {
+        referenceImages.setAttribute('multiple', '');
+        if (uploadedImages.length > 1) {
+          uploadedImages = [uploadedImages[0]];
+          updateImagePreviews();
+          updateImageUploadStatus();
+        }
+      } else {
+        referenceImages.setAttribute('multiple', 'multiple');
+      }
+});
+
+// Add a model change event listener to handle Groq vision models
+modelSelect.addEventListener('change', () => {
+  const provider = providerSelect.value;
+  const model = modelSelect.value;
+  const imageUploadContainer = document.querySelector('.image-upload-container');
+  
+  if (provider === 'groq') {
+    const isVisionModel = model.includes('vision') || model.includes('llava');
+    imageUploadContainer.classList.toggle('disabled', !isVisionModel);
+    referenceImages.disabled = !isVisionModel;
+    
+    if (!isVisionModel) {
+      uploadedImages = [];
+      updateImagePreviews();
+      updateImageUploadStatus();
+    }
+  }
+});

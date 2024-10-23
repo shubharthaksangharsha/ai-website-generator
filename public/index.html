@@ -25,8 +25,28 @@
             <div class="description-box">
                 <h2>WEBSITE DESCRIPTION</h2>
                 <textarea id="ai-prompt" placeholder="Enter your website description here..."></textarea>
+                <div class="image-upload-section">
+                    <div class="image-upload-container">
+                        <label for="reference-images" class="image-upload-label">
+                            Attach images (Available for OpenAI/Google models)
+                            <input 
+                                type="file" 
+                                id="reference-images" 
+                                accept="image/*" 
+                                class="image-upload-input"
+                                data-provider-support="google,openai"
+                                multiple
+                            >
+                        </label>
+                        <div id="images-preview-container" class="images-grid hidden">
+                            <!-- Image previews will be dynamically added here -->
+                        </div>
+                        <p id="image-status" class="image-status"></p>
+                    </div>
+                </div>
                 <button id="generate-btn">Generate Website</button>
             </div>
+            
             <div class="modify-box">
                 <h2>MODIFY WEBSITE</h2>
                 <textarea id="modify-prompt" placeholder="Enter modifications here..."></textarea>

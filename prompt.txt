@@ -1,12 +1,10 @@
 am working on a project call ai-website-generator based on react-based project. This project basically uses LLM and generate code which streams and render live to user and create website. The code is working great and website looks amazing. few things to change:-  
-It's working great. I want you to fix the following thing:- 
 
-Amazing, it's working I want you to add certain things in my app
+I want you to add an functionality in my app
 
-Attach the image and I want the following changes:- 
-
-I want an check box at side lower buttom side of Modify prompt which ask to attach Image of Live Preview window which will helps LLM to understand much better about the image with text. Please do these changes for two models 1. OpenAI Models and Gemini models:- 
-
+Attach the image and I want the following change in my app:- 
+I want an image upload button 'Attach image (Available for OpenAI/Google models):' at side lower buttom side of website description prompt which ask to attach Image of Live Preview window which will helps LLM to understand much better about the image with text. Please do these changes for two models 1. OpenAI Models and Gemini models:- 
+I have done doing index.html and style.css. Write code for app.js and script.js 
 I am attach documentation of both model for clear understanding 
 
 
@@ -14,7 +12,8 @@ I am attach documentation of both model for clear understanding
 Attached every documentation below:- 
 
 OpenAI Documentation for streaming:- 
- import OpenAI from "openai";
+
+import OpenAI from "openai";
 
 const openai = new OpenAI();
 
@@ -35,70 +34,247 @@ async function main() {
 
 main();
 
-GROQ Documentation:- 
-import Groq from "groq-sdk";
+Image uploadation documentation :- 
 
-const groq = new Groq();
+Docs
+API reference
+Vision
+Learn how to use vision capabilities to understand images.
 
-export async function main() {
-  const stream = await getGroqChatStream();
-  for await (const chunk of stream) {
-    // Print the completion returned by the LLM.
-    console.log(chunk.choices[0]?.delta?.content || "");
-  }
-}
+Introduction
+GPT-4o, GPT-4o mini, and GPT-4 Turbo have vision capabilities, meaning the models can take in images and answer questions about them. Historically, language model systems have been limited by taking in a single input modality, text.
 
-export async function getGroqChatStream() {
-  return groq.chat.completions.create({
-    //
-    // Required parameters
-    //
+Quickstart
+Images are made available to the model in two main ways: by passing a link to the image or by passing the base64 encoded image directly in the request. Images can be passed in the user messages.
+
+What's in this image?
+node
+
+node
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+
+async function main() {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [
-      // Set an optional system message. This sets the behavior of the
-      // assistant and can be used to provide specific instructions for
-      // how it should behave throughout the conversation.
-      {
-        role: "system",
-        content: "you are a helpful assistant.",
-      },
-      // Set a user message for the assistant to respond to.
       {
         role: "user",
-        content: "Explain the importance of fast language models",
+        content: [
+          { type: "text", text: "What’s in this image?" },
+          {
+            type: "image_url",
+            image_url: {
+              "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+            },
+          },
+        ],
       },
     ],
-
-    // The language model which will generate the completion.
-    model: "llama3-8b-8192",
-
-    //
-    // Optional parameters
-    //
-
-    // Controls randomness: lowering results in less random completions.
-    // As the temperature approaches zero, the model will become deterministic
-    // and repetitive.
-    temperature: 0.5,
-
-    // The maximum number of tokens to generate. Requests can use up to
-    // 2048 tokens shared between prompt and completion.
-    max_tokens: 1024,
-
-    // Controls diversity via nucleus sampling: 0.5 means half of all
-    // likelihood-weighted options are considered.
-    top_p: 1,
-
-    // A stop sequence is a predefined or user-specified text string that
-    // signals an AI to stop generating content, ensuring its responses
-    // remain focused and concise. Examples include punctuation marks and
-    // markers like "[end]".
-    stop: null,
-
-    // If set, partial message deltas will be sent.
-    stream: true,
   });
+  console.log(response.choices[0]);
 }
-Gemini documentation:- 
+main();
+The model is best at answering general questions about what is present in the images. While it does understand the relationship between objects in images, it is not yet optimized to answer detailed questions about the location of certain objects in an image. For example, you can ask it what color a car is or what some ideas for dinner might be based on what is in you fridge, but if you show it an image of a room and ask it where the chair is, it may not answer the question correctly.
+
+It is important to keep in mind the limitations of the model as you explore what use-cases visual understanding can be applied to.
+
+Video understanding with vision
+Learn how to use use GPT-4 with Vision to understand videos in the OpenAI Cookbook
+
+Uploading base 64 encoded images
+If you have an image or set of images locally, you can pass those to the model in base 64 encoded format, here is an example of this in action:
+
+import base64
+import requests
+
+# OpenAI API Key
+api_key = "YOUR_OPENAI_API_KEY"
+
+# Function to encode the image
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    return base64.b64encode(image_file.read()).decode('utf-8')
+
+# Path to your image
+image_path = "path_to_your_image.jpg"
+
+# Getting the base64 string
+base64_image = encode_image(image_path)
+
+headers = {
+  "Content-Type": "application/json",
+  "Authorization": f"Bearer {api_key}"
+}
+
+payload = {
+  "model": "gpt-4o-mini",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What’s in this image?"
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": f"data:image/jpeg;base64,{base64_image}"
+          }
+        }
+      ]
+    }
+  ],
+  "max_tokens": 300
+}
+
+response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+
+print(response.json())
+Multiple image inputs
+The Chat Completions API is capable of taking in and processing multiple image inputs in both base64 encoded format or as an image URL. The model will process each image and use the information from all of them to answer the question.
+
+Multiple image inputs
+node
+
+node
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+
+async function main() {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "What are in these images? Is there any difference between them?" },
+          {
+            type: "image_url",
+            image_url: {
+              "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+            },
+          },
+          {
+            type: "image_url",
+            image_url: {
+              "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+            },
+          }
+        ],
+      },
+    ],
+  });
+  console.log(response.choices[0]);
+}
+main();
+Here the model is shown two copies of the same image and can answer questions about both or each of the images independently.
+
+Low or high fidelity image understanding
+By controlling the detail parameter, which has three options, low, high, or auto, you have control over how the model processes the image and generates its textual understanding. By default, the model will use the auto setting which will look at the image input size and decide if it should use the low or high setting.
+
+low will enable the "low res" mode. The model will receive a low-res 512px x 512px version of the image, and represent the image with a budget of 85 tokens. This allows the API to return faster responses and consume fewer input tokens for use cases that do not require high detail.
+high will enable "high res" mode, which first allows the model to first see the low res image (using 85 tokens) and then creates detailed crops using 170 tokens for each 512px x 512px tile.
+Choosing the detail level
+node
+
+node
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+
+async function main() {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "What’s in this image?" },
+          {
+            type: "image_url",
+            image_url: {
+              "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+              "detail": "low"
+            },
+          },
+        ],
+      },
+    ],
+  });
+  console.log(response.choices[0]);
+}
+main();
+Managing images
+The Chat Completions API, unlike the Assistants API, is not stateful. That means you have to manage the messages (including images) you pass to the model yourself. If you want to pass the same image to the model multiple times, you will have to pass the image each time you make a request to the API.
+
+For long running conversations, we suggest passing images via URL's instead of base64. The latency of the model can also be improved by downsizing your images ahead of time to be less than the maximum size they are expected them to be. For low res mode, we expect a 512px x 512px image. For high res mode, the short side of the image should be less than 768px and the long side should be less than 2,000px.
+
+After an image has been processed by the model, it is deleted from OpenAI servers and not retained. We do not use data uploaded via the OpenAI API to train our models.
+
+Limitations
+While GPT-4 with vision is powerful and can be used in many situations, it is important to understand the limitations of the model. Here are some of the limitations we are aware of:
+
+Medical images: The model is not suitable for interpreting specialized medical images like CT scans and shouldn't be used for medical advice.
+Non-English: The model may not perform optimally when handling images with text of non-Latin alphabets, such as Japanese or Korean.
+Small text: Enlarge text within the image to improve readability, but avoid cropping important details.
+Rotation: The model may misinterpret rotated / upside-down text or images.
+Visual elements: The model may struggle to understand graphs or text where colors or styles like solid, dashed, or dotted lines vary.
+Spatial reasoning: The model struggles with tasks requiring precise spatial localization, such as identifying chess positions.
+Accuracy: The model may generate incorrect descriptions or captions in certain scenarios.
+Image shape: The model struggles with panoramic and fisheye images.
+Metadata and resizing: The model doesn't process original file names or metadata, and images are resized before analysis, affecting their original dimensions.
+Counting: May give approximate counts for objects in images.
+CAPTCHAS: For safety reasons, we have implemented a system to block the submission of CAPTCHAs.
+Calculating costs
+Image inputs are metered and charged in tokens, just as text inputs are. The token cost of a given image is determined by two factors: its size, and the detail option on each image_url block. All images with detail: low cost 85 tokens each. detail: high images are first scaled to fit within a 2048 x 2048 square, maintaining their aspect ratio. Then, they are scaled such that the shortest side of the image is 768px long. Finally, we count how many 512px squares the image consists of. Each of those squares costs 170 tokens. Another 85 tokens are always added to the final total.
+
+Here are some examples demonstrating the above.
+
+A 1024 x 1024 square image in detail: high mode costs 765 tokens
+1024 is less than 2048, so there is no initial resize.
+The shortest side is 1024, so we scale the image down to 768 x 768.
+4 512px square tiles are needed to represent the image, so the final token cost is 170 * 4 + 85 = 765.
+A 2048 x 4096 image in detail: high mode costs 1105 tokens
+We scale down the image to 1024 x 2048 to fit within the 2048 square.
+The shortest side is 1024, so we further scale down to 768 x 1536.
+6 512px tiles are needed, so the final token cost is 170 * 6 + 85 = 1105.
+A 4096 x 8192 image in detail: low most costs 85 tokens
+Regardless of input size, low detail images are a fixed cost.
+FAQ
+Can I fine-tune the image capabilities in gpt-4?
+No, we do not support fine-tuning the image capabilities of gpt-4 at this time.
+
+Can I use gpt-4 to generate images?
+No, you can use dall-e-3 to generate images and gpt-4o, gpt-4o-mini or gpt-4-turbo to understand images.
+
+What type of files can I upload?
+We currently support PNG (.png), JPEG (.jpeg and .jpg), WEBP (.webp), and non-animated GIF (.gif).
+
+Is there a limit to the size of the image I can upload?
+Yes, we restrict image uploads to 20MB per image.
+
+Can I delete an image I uploaded?
+No, we will delete the image for you automatically after it has been processed by the model.
+
+Where can I learn more about the considerations of GPT-4 with Vision?
+You can find details about our evaluations, preparation, and mitigation work in the GPT-4 with Vision system card.
+
+We have further implemented a system to block the submission of CAPTCHAs.
+
+How do rate limits for GPT-4 with Vision work?
+We process images at the token level, so each image we process counts towards your tokens per minute (TPM) limit. See the calculating costs section for details on the formula used to determine token count per image.
+
+Can GPT-4 with Vision understand image metadata?
+No, the model does not receive image metadata.
+
+What happens if my image is unclear?
+If an image is ambiguous or unclear, the model will do its best to interpret it. However, the results may be less accurate. A good rule of thumb is that if an average human cannot see the info in an image at the resolutions used in low/high res mode, then the model cannot either.
+
+Google Gemini documentation:- 
 Generate text using the Gemini API 
 
 bookmark_border
@@ -362,3 +538,533 @@ const safetySettings: [
                     ];
 
 const model = genAi.getGenerativeModel({ model: "gemini-1.5-flash", safetySettings });
+
+Using files 
+
+bookmark_border
+
+
+The Gemini API supports uploading media files separately from the prompt input, allowing your media to be reused across multiple requests and multiple prompts. For more details, check out the Prompting with media guide.
+
+Method: media.upload
+Creates a File.
+
+Endpoint
+Upload URI, for media upload requests:
+POST
+https://generativelanguage.googleapis.com/upload/v1beta/files
+Metadata URI, for metadata-only requests:
+POST
+https://generativelanguage.googleapis.com/v1beta/files
+Request body
+The request body contains data with the following structure:
+
+Fields
+file
+object (File)
+Optional. Metadata for the file to create.
+
+Example request
+Image
+Audio
+Text
+Video
+PDF
+Python
+Node.js
+Go
+Shell
+
+// Make sure to include these imports:
+// import { GoogleAIFileManager } from "@google/generative-ai/server";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const uploadResult = await fileManager.uploadFile(
+  ${mediaPath}/jetpack.jpg,
+  {
+    mimeType: "image/jpeg",
+    displayName: "Jetpack drawing",
+  },
+);
+// View the response.
+console.log(
+  Uploaded file ${uploadResult.file.displayName} as: ${uploadResult.file.uri},
+);
+
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const result = await model.generateContent([
+  "Tell me about this image.",
+  {
+    fileData: {
+      fileUri: uploadResult.file.uri,
+      mimeType: uploadResult.file.mimeType,
+    },
+  },
+]);
+console.log(result.response.text());
+Response body
+Response for media.upload.
+
+If successful, the response body contains data with the following structure:
+
+Fields
+file
+object (File)
+Metadata for the created file.
+
+JSON representation
+
+{
+  "file": {
+    object (File)
+  }
+}
+Method: files.get
+Gets the metadata for the given File.
+
+Endpoint
+GET
+https://generativelanguage.googleapis.com/v1beta/{name=files/*}
+
+Path parameters
+name
+string
+Required. The name of the File to get. Example: files/abc-123 It takes the form files/{file}.
+
+Request body
+The request body must be empty.
+
+Example request
+Python
+Node.js
+Go
+Shell
+
+// Make sure to include these imports:
+// import { GoogleAIFileManager } from "@google/generative-ai/server";
+const fileManager = new GoogleAIFileManager(process.env.API_KEY);
+
+const uploadResponse = await fileManager.uploadFile(
+  ${mediaPath}/jetpack.jpg,
+  {
+    mimeType: "image/jpeg",
+    displayName: "Jetpack drawing",
+  },
+);
+
+// Get the previously uploaded file's metadata.
+const getResponse = await fileManager.getFile(uploadResponse.file.name);
+
+// View the response.
+console.log(
+  Retrieved file ${getResponse.displayName} as ${getResponse.uri},
+);
+Response body
+If successful, the response body contains an instance of File.
+
+//app.js
+const express = require('express');
+const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require('@google/generative-ai');
+const OpenAI = require('openai');
+const Groq = require('groq-sdk');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const app = express();
+const port = 3000;
+
+app.use(express.static('public'));
+app.use(express.json());
+
+// Initialize AI providers
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+const googleModels = [
+  "gemini-1.5-flash",
+  "gemini-1.5-pro-exp-0801",
+  "gemini-1.5-pro",
+  "gemini-1.0-pro"
+];
+
+const openAIModels = [
+  "gpt-4",
+  "gpt-3.5-turbo",
+  "gpt-4-0125-preview",
+  "gpt-4-turbo-preview"
+];
+
+const groqModels = [
+  "llama-3.1-405b-reasoning",
+  "llama-3.1-70b-versatile",
+  "llama-3.1-8b-instant",
+  "llama3-groq-70b-8192-tool-use-preview",
+  "llama3-groq-8b-8192-tool-use-preview",
+  "llama3-70b-8192",
+  "llama3-8b-8192",
+  "mixtral-8x7b-32768",
+  "gemma-7b-it",
+  "gemma2-9b-it"
+];
+
+const systemPrompt = "You are an AI assistant specialized in creating websites based on user descriptions. Your task is to generate clean, valid HTML, CSS, and JavaScript code for a website. Respond only with the code needed to create the website, without any explanations or markdown formatting. The code should be ready to be rendered directly in a browser.";
+
+async function generateWebsiteCode(provider, model, prompt) {
+  switch (provider) {
+    case 'google':
+      return generateGoogleWebsiteCode(model, prompt);
+    case 'openai':
+      return generateOpenAIWebsiteCode(model, prompt);
+    case 'groq':
+      return generateGroqWebsiteCode(model, prompt);
+    default:
+      throw new Error('Invalid provider');
+  }
+}
+
+async function generateGoogleWebsiteCode(model, prompt) {
+  const googleModel = genAI.getGenerativeModel({ 
+    model: model,
+    safetySettings: [
+      {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+    ],
+  });
+
+  const chat = googleModel.startChat({
+    history: [
+      {
+        role: "user",
+        parts: [{ text: prompt }],
+      },
+      {
+        role: "model",
+        parts: [{ text: "Understood. I'm ready to generate website code based on user descriptions. I'll provide clean, valid HTML, CSS, and JavaScript code without any explanations or markdown formatting." }],
+      },
+    ],
+  });
+
+  const result = await chat.sendMessageStream(prompt);
+  return result.stream;
+}
+
+async function generateOpenAIWebsiteCode(model, prompt) {
+  const stream = await openai.chat.completions.create({
+    model: model,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: prompt }, 
+    ],
+    stream: true,
+  });
+
+  return stream;
+}
+
+async function generateGroqWebsiteCode(model, prompt) {
+  const stream = await groq.chat.completions.create({
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: prompt }
+    ],
+    model: model,
+    stream: true,
+  });
+
+  return stream;
+}
+
+app.post('/generate', async (req, res) => {
+  const { prompt, provider, model } = req.body;
+  handleWebsiteGeneration(req, res, prompt, provider, model);
+});
+
+app.post('/modify', async (req, res) => {
+  const { prompt, currentCode, provider, model } = req.body;
+  const modifyPrompt = Modify the following website code based on this instruction: ${prompt}\n\nCurrent code:\n${currentCode};
+  handleWebsiteGeneration(req, res, modifyPrompt, provider, model);
+});
+
+async function handleWebsiteGeneration(req, res, prompt, provider, model) {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive'
+  });
+
+  try {
+    const stream = await generateWebsiteCode(provider, model, prompt);
+
+    if (provider === 'google') {
+      for await (const chunk of stream) {
+        const chunkText = chunk.text();
+        res.write(data: ${JSON.stringify({ text: chunkText })}\n\n);
+      }
+    } else if (provider === 'openai') {
+      for await (const chunk of stream) {
+        res.write(data: ${JSON.stringify({ text: chunk.choices[0]?.delta?.content || '' })}\n\n);
+      }
+    } else if (provider === 'groq') {
+      for await (const chunk of stream) {
+        res.write(data: ${JSON.stringify({ text: chunk.choices[0]?.delta?.content || '' })}\n\n);
+      }
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.write(data: ${JSON.stringify({ error: 'An error occurred' })}\n\n);
+  }
+
+  res.write('event: close\n\n');
+  res.end();
+}
+
+app.get('/models', (req, res) => {
+  res.json({
+    google: googleModels,
+    openai: openAIModels,
+    groq: groqModels
+  });
+});
+
+app.listen(port, () => {
+  console.log(Server running at http://localhost:${port});
+});
+
+//script.js
+const aiPrompt = document.getElementById('ai-prompt');
+const generateBtn = document.getElementById('generate-btn');
+const modifyPrompt = document.getElementById('modify-prompt');
+const modifyBtn = document.getElementById('modify-btn');
+const previewFrame = document.getElementById('preview-frame');
+const loading = document.getElementById('loading');
+const providerSelect = document.getElementById('provider-select');
+const modelSelect = document.getElementById('model-select');
+const downloadBtn = document.getElementById('download-btn');
+
+let currentWebsiteCode = '';
+let models = {};
+
+async function fetchModels() {
+    const response = await fetch('/models');
+    models = await response.json();
+    updateModelSelect();
+}
+
+function updateModelSelect() {
+    const provider = providerSelect.value;
+    modelSelect.innerHTML = '';
+    if (models[provider]) {
+        models[provider].forEach(model => {
+            const option = document.createElement('option');
+            option.value = model;
+            option.textContent = model;
+            modelSelect.appendChild(option);
+        });
+    } else {
+        console.error(No models found for provider: ${provider});
+    }
+}
+
+providerSelect.addEventListener('change', updateModelSelect);
+
+fetchModels();
+
+async function generateWebsite(prompt, isModify = false) {
+    loading.classList.remove('hidden');
+    generateBtn.disabled = true;
+    modifyBtn.disabled = true;
+
+    const endpoint = isModify ? '/modify' : '/generate';
+    const body = {
+        prompt: prompt,
+        provider: providerSelect.value,
+        model: modelSelect.value,
+    };
+
+    if (isModify) {
+        body.currentCode = currentWebsiteCode;
+    }
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
+
+        const reader = response.body.getReader();
+        let accumulatedHtml = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = new TextDecoder().decode(value);
+            const lines = chunk.split('\n');
+            lines.forEach(line => {
+                if (line.startsWith('data: ')) {
+                    const data = JSON.parse(line.slice(6));
+                    if (data.text) {
+                        let cleanedText = cleanGeneratedCode(data.text);
+                        accumulatedHtml += cleanedText;
+                        updatePreview(accumulatedHtml);
+                    }
+                }
+            });
+        }
+
+        currentWebsiteCode = accumulatedHtml;
+    } catch (error) {
+        console.error('Error:', error);
+    } finally {
+        loading.classList.add('hidden');
+        generateBtn.disabled = false;
+        modifyBtn.disabled = false;
+    }
+}
+
+function cleanGeneratedCode(code) {
+    code = code.replace(/^
+|
+$/g, '');
+    code = code.replace(/
+\w+\n/g, '');
+    code = code.replace(/<lang="en">/g, '');
+    return code;
+}
+
+function updatePreview(html) {
+    // Remove any surrounding HTML tags if present
+    html = html.replace(/^\s*<html>|<\/html>\s*$/gi, '');
+    html = html.replace(/^\s*<body>|<\/body>\s*$/gi, '');
+
+    // Extract style and script content
+    let style = '';
+    let script = '';
+    const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/i);
+    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
+
+    if (styleMatch) {
+        style = styleMatch[1];
+        html = html.replace(styleMatch[0], '');
+    }
+    if (scriptMatch) {
+        script = scriptMatch[1];
+        html = html.replace(scriptMatch[0], '');
+    }
+
+    // Clean up any remaining HTML, head, or body tags
+    html = html.replace(/<\/?html>|<\/?head>|<\/?body>/gi, '');
+
+    // Remove any leading "html" text
+    html = html.replace(/^html/i, '');
+
+    // Update the preview frame
+    const previewContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Preview</title>
+            <style>${style}</style>
+        </head>
+        <body>${html}</body>
+        <script>${script}</script>
+        </html>
+    `;
+
+    // Use srcdoc to update the iframe content
+    previewFrame.srcdoc = previewContent;
+}
+
+async function downloadWebsite() {
+    const zip = new JSZip();
+    
+    // Extract HTML content
+    let htmlContent = currentWebsiteCode;
+    
+    // Extract and remove style content
+    let style = '';
+    const styleMatch = htmlContent.match(/<style>([\s\S]*?)<\/style>/i);
+    if (styleMatch) {
+        style = styleMatch[1];
+        htmlContent = htmlContent.replace(styleMatch[0], '');
+    }
+    
+    // Extract and remove script content
+    let script = '';
+    const scriptMatch = htmlContent.match(/<script>([\s\S]*?)<\/script>/i);
+    if (scriptMatch) {
+        script = scriptMatch[1];
+        htmlContent = htmlContent.replace(scriptMatch[0], '');
+    }
+    
+    // Clean up the HTML content
+    htmlContent = htmlContent.replace(/^\s*<html>|<\/html>\s*$/gi, '');
+    htmlContent = htmlContent.replace(/^\s*<body>|<\/body>\s*$/gi, '');
+    htmlContent = htmlContent.replace(/<\/?html>|<\/?head>|<\/?body>/gi, '');
+    
+    // Create the final HTML file
+    const finalHtml = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Generated Website</title>
+            <link rel="stylesheet" href="styles.css">
+        </head>
+        <body>
+            ${htmlContent}
+            <script src="script.js"></script>
+        </body>
+        </html>
+    `;
+    
+    zip.file("index.html", finalHtml);
+    
+    // Add CSS file
+    if (style) {
+        zip.file("styles.css", style);
+    }
+    
+    // Add JS file
+    if (script) {
+        zip.file("script.js", script);
+    }
+    
+    // Generate the zip file
+    const content = await zip.generateAsync({type: "blob"});
+    
+    // Create a filename based on the user's prompt
+    const prompt = aiPrompt.value.trim();
+    const filename = prompt.split(' ').slice(0, 3).join('-').toLowerCase().replace(/[^a-z0-9-]/g, '') || 'my-website';
+    
+    // Save the zip file with the new filename
+    saveAs(content, `${filename}.zip`);
+}
+
+generateBtn.addEventListener('click', () => generateWebsite(aiPrompt.value));
+modifyBtn.addEventListener('click', () => generateWebsite(modifyPrompt.value, true));
+downloadBtn.addEventListener('click', downloadWebsite);
