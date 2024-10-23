@@ -10,6 +10,9 @@ const downloadBtn = document.getElementById('download-btn');
 const referenceImages = document.getElementById('reference-images');
 const imagesPreviewContainer = document.getElementById('images-preview-container');
 const imageStatus = document.getElementById('image-status');
+const previewToggle = document.getElementById('preview-toggle');
+const codeToggle = document.getElementById('code-toggle');
+const codeView = document.getElementById('code-view');
 
 let currentWebsiteCode = '';
 let models = [];
@@ -195,6 +198,9 @@ function updatePreview(html) {
     // Update the iframe content
     const previewFrame = document.getElementById('preview-frame');
     previewFrame.srcdoc = previewContent;
+
+    // Add this at the end of the function
+    updateCodeView(html);
 }
 
 async function downloadWebsite() {
@@ -420,9 +426,8 @@ function showNotification(message) {
 
 // Add these new functions
 function updateVersionNavigation() {
-    const previewSection = document.querySelector('.preview-section');
-    if (!previewSection.querySelector('.version-navigation')) {
-        // Add navigation controls if they don't exist
+    const previewHeader = document.querySelector('.preview-header');
+    if (!previewHeader.querySelector('.version-navigation')) {
         const navigation = document.createElement('div');
         navigation.className = 'version-navigation';
         navigation.innerHTML = `
@@ -430,7 +435,9 @@ function updateVersionNavigation() {
             <span class="version-info"></span>
             <button class="nav-btn next-btn" title="Next Version (→)">→</button>
         `;
-        previewSection.insertBefore(navigation, previewFrame);
+        
+        // Insert after the h2 but before the view-toggle
+        previewHeader.insertBefore(navigation, previewHeader.querySelector('.view-toggle'));
         
         // Add click handlers
         navigation.querySelector('.prev-btn').addEventListener('click', () => navigateVersion(-1));
@@ -475,3 +482,44 @@ document.addEventListener('keydown', (event) => {
         navigateVersion(1);
     }
 });
+
+// Add this function after updatePreview function
+function updateCodeView(html) {
+    // Format the code with syntax highlighting
+    const formattedCode = html
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/(".*?")/g, '<span class="string">$1</span>')
+        .replace(/(&lt;\/?[a-z]+(&gt;)?)/g, '<span class="keyword">$1</span>')
+        .replace(/(\/\*.*?\*\/|\/\/.*$)/gm, '<span class="comment">$1</span>');
+    
+    codeView.querySelector('code').innerHTML = formattedCode;
+}
+
+// Add event listeners for toggle buttons
+previewToggle.addEventListener('click', () => {
+    previewToggle.classList.add('active');
+    codeToggle.classList.remove('active');
+    previewFrame.classList.add('active');
+    codeView.classList.remove('active');
+});
+
+codeToggle.addEventListener('click', () => {
+    codeToggle.classList.add('active');
+    previewToggle.classList.remove('active');
+    codeView.classList.add('active');
+    previewFrame.classList.remove('active');
+});
+
+// Add keyboard shortcut for toggling views
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'b') {
+        if (previewFrame.classList.contains('active')) {
+            codeToggle.click();
+        } else {
+            previewToggle.click();
+        }
+    }
+});
+

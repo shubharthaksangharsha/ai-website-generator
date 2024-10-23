@@ -58,8 +58,17 @@
         
         </div>
         <div class="preview-section">
-            <h2>LIVE PREVIEW</h2>
-            <iframe id="preview-frame"></iframe>
+            <div class="preview-header">
+                <h2>LIVE PREVIEW</h2>
+                <div class="view-toggle">
+                    <button id="preview-toggle" class="toggle-btn active" data-view="preview">Preview</button>
+                    <button id="code-toggle" class="toggle-btn" data-view="code">Code</button>
+                </div>
+            </div>
+            <div class="preview-container">
+                <iframe id="preview-frame" class="active"></iframe>
+                <pre id="code-view" class="code-preview"><code></code></pre>
+            </div>
         </div>
     </div>
     <div id="loading" class="hidden">Generating...</div>

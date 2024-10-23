@@ -342,17 +342,16 @@ footer a:hover::before {
 .version-navigation {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 15px;
-    margin-bottom: 10px;
-    padding: 5px;
+    padding: 5px 15px;
     background-color: #1a1a1a;
     border-radius: 4px;
+    margin-left: 20px;
 }
 
 .nav-btn {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     background-color: #333;
     color: #00ffff;
     border: 1px solid #00ffff;
@@ -361,7 +360,7 @@ footer a:hover::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 16px;
     padding: 0;
     transition: all 0.2s ease;
 }
@@ -381,8 +380,8 @@ footer a:hover::before {
 .version-info {
     color: #00ffff;
     font-family: 'VT323', monospace;
-    font-size: 16px;
-    min-width: 120px;
+    font-size: 14px;
+    min-width: 100px;
     text-align: center;
 }
 
@@ -390,3 +389,73 @@ footer a:hover::before {
 #preview-frame {
     height: calc(100vh - 190px);
 }
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 5px;
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #00ffff;
+}
+
+.view-toggle {
+    display: flex;
+    gap: 10px;
+}
+
+.toggle-btn {
+    width: auto;
+    background: #1a1a1a;
+    color: #00ffff;
+    border: 1px solid #00ffff;
+    padding: 5px 15px;
+    cursor: pointer;
+    font-family: 'VT323', monospace;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background: #2a2a2a;
+}
+
+.toggle-btn.active {
+    background: #00ffff;
+    color: #000;
+}
+
+.preview-container {
+    position: relative;
+    height: calc(100vh - 150px);
+}
+
+#preview-frame, #code-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: none;
+    background: white;
+}
+
+#preview-frame.active, #code-view.active {
+    display: block;
+}
+
+.code-preview {
+    background: #1a1a1a;
+    color: #00ffff;
+    padding: 20px;
+    margin: 0;
+    overflow: auto;
+    font-family: monospace;
+    white-space: pre-wrap;
+    border: 1px solid #00ffff;
+}
+
+.code-preview .keyword { color: #ff00ff; }
+.code-preview .string { color: #ffff00; }
+.code-preview .comment { color: #808080; }
