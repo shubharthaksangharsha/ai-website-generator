@@ -259,8 +259,14 @@ app.get('/models', (req, res) => {
   });
 });
 
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + 'public', '/index.html');
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+
 
 module.exports = app;
