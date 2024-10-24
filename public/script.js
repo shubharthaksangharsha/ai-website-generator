@@ -522,4 +522,3 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
-

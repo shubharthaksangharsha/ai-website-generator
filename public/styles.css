@@ -385,7 +385,6 @@ footer a:hover::before {
     text-align: center;
 }
 
-/* Adjust preview frame height to accommodate navigation */
 #preview-frame {
     height: calc(100vh - 190px);
 }
@@ -447,7 +446,7 @@ footer a:hover::before {
 
 .code-preview {
     background: #1a1a1a;
-    color: #00ffff;
+    color: black;
     padding: 20px;
     margin: 0;
     overflow: auto;
