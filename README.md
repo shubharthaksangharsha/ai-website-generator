@@ -1,5 +1,5 @@
 # AI Website Generator 
-![ai-website-generator](https://github.com/shubharthaksangharsha/ai-website-generator/blob/main/ai-website-generator-video.gif)
+![ai-website-generator](https://github.com/shubharthaksangharsha/ai-website-generator/blob/main/uploads/ai-website-generator-video.gif)
 
 Generate and modify websites in real-time using cutting-edge AI models!
 
