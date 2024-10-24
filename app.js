@@ -26,7 +26,6 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const googleModels = [
-  "gemini-1.5-pro-exp-027",
   "gemini-1.5-flash-002",
   "gemini-1.5-pro-002",
   "gemini-1.5-flash",
@@ -263,3 +262,5 @@ app.get('/models', (req, res) => {
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+module.exports = app;
