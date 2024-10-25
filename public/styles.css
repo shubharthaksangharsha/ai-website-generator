@@ -444,6 +444,10 @@ footer a:hover::before {
     display: block;
 }
 
+.code-preview .keyword { color: #ff00ff; }
+.code-preview .string { color: #ffff00; }
+.code-preview .comment { color: #808080; }
+
 .code-preview {
     background: #1a1a1a;
     color: black;
@@ -453,8 +457,49 @@ footer a:hover::before {
     font-family: monospace;
     white-space: pre-wrap;
     border: 1px solid #00ffff;
+    outline: none;
 }
 
-.code-preview .keyword { color: #ff00ff; }
-.code-preview .string { color: #ffff00; }
-.code-preview .comment { color: #808080; }
+.code-preview:focus {
+    border-color: #00ff00;
+}
+
+.view-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.execute-btn {
+    background: #1a1a1a;
+    color: #00ffff;
+    border: 1px solid #00ffff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.execute-btn:hover {
+    background: #00ffff;
+    color: #1a1a1a;
+}
+
+.launch-icon {
+    font-size: 18px;
+}
+
+.execute-btn:active {
+    transform: scale(0.95);
+}
+
+.code-preview code {
+    outline: none; /* Remove the outline when focused */
+    caret-color: black; /* Make cursor green to match theme */
+    display: block;
+    width: 100%;
+}

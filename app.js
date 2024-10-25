@@ -111,6 +111,15 @@ async function generateGoogleWebsiteCode(model, prompt, images = []) {
   const chat = googleModel.startChat({
     history: [
       {
+        role: "user", 
+        parts: [{text: systemPrompt}],
+      },
+      {
+        role: "model", 
+        parts: [{text: "Understood. I will provide the website code based on user description and images. I'll provide clean, valid HTML, CSS, and JavaScript code without any explanations or markdown formatting. I will make sure <style> and <script> part comes within inside the <html>."}]
+
+      },
+      {
         role: "user",
         parts: [{ text: prompt }],
       },

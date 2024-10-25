@@ -483,8 +483,21 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    const codeElement = codeView.querySelector('code');
+    codeElement.contentEditable = 'true';
+    codeElement.spellcheck = false;
+});
+
 // Add this function after updatePreview function
 function updateCodeView(html) {
+    const codeElement = codeView.querySelector('code');
+    if (!codeElement.contentEditable) {
+        codeElement.contentEditable = 'true';
+        codeElement.spellcheck = false;
+    }
+    
+    
     // Format the code with syntax highlighting
     const formattedCode = html
         .replace(/&/g, '&amp;')
@@ -494,7 +507,18 @@ function updateCodeView(html) {
         .replace(/(&lt;\/?[a-z]+(&gt;)?)/g, '<span class="keyword">$1</span>')
         .replace(/(\/\*.*?\*\/|\/\/.*$)/gm, '<span class="comment">$1</span>');
     
-    codeView.querySelector('code').innerHTML = formattedCode;
+    codeElement.innerHTML = formattedCode;
+}
+
+function executeCode() {
+    const codeElement = codeView.querySelector('code');
+    const code = codeElement.innerText
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+    
+    updatePreview(code);
+    previewToggle.click(); // Switch to preview mode
 }
 
 // Add event listeners for toggle buttons
@@ -512,6 +536,10 @@ codeToggle.addEventListener('click', () => {
     previewFrame.classList.remove('active');
 });
 
+// Add execute button functionality
+const executeButton = document.getElementById('execute-code');
+executeButton.addEventListener('click', executeCode);
+
 // Add keyboard shortcut for toggling views
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.key === 'b') {
@@ -520,5 +548,9 @@ document.addEventListener('keydown', (e) => {
         } else {
             previewToggle.click();
         }
+    }
+
+    if (e.ctrlKey && e.key === 'Enter') {
+        executeCode();
     }
 });
