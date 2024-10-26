@@ -426,23 +426,30 @@ function showNotification(message) {
 
 // Add these new functions
 function updateVersionNavigation() {
-    const previewHeader = document.querySelector('.preview-header');
-    if (!previewHeader.querySelector('.version-navigation')) {
-        const navigation = document.createElement('div');
-        navigation.className = 'version-navigation';
-        navigation.innerHTML = `
-            <button class="nav-btn prev-btn" title="Previous Version (←)">←</button>
-            <span class="version-info"></span>
-            <button class="nav-btn next-btn" title="Next Version (→)">→</button>
-        `;
-        
-        // Insert after the h2 but before the view-toggle
-        previewHeader.insertBefore(navigation, previewHeader.querySelector('.view-toggle'));
-        
-        // Add click handlers
-        navigation.querySelector('.prev-btn').addEventListener('click', () => navigateVersion(-1));
-        navigation.querySelector('.next-btn').addEventListener('click', () => navigateVersion(1));
+const previewHeader = document.querySelector('.preview-header');
+    
+    // Remove existing navigation if present
+    const existingNav = previewHeader.querySelector('.version-navigation');
+    if (existingNav) {
+        existingNav.remove();
     }
+
+    // Create new navigation element
+    const navigation = document.createElement('div');
+    navigation.className = 'version-navigation';
+    navigation.innerHTML = `
+        <button class="nav-btn prev-btn" title="Previous Version (←)">←</button>
+        <span class="version-info"></span>
+        <button class="nav-btn next-btn" title="Next Version (→)">→</button>
+    `;
+    
+    // Insert after h2 but before view-controls
+    const viewControls = previewHeader.querySelector('.view-controls');
+    previewHeader.insertBefore(navigation, viewControls);
+    
+    // Add click handlers
+    navigation.querySelector('.prev-btn').addEventListener('click', () => navigateVersion(-1));
+    navigation.querySelector('.next-btn').addEventListener('click', () => navigateVersion(1));
     
     updateVersionInfo();
 }
