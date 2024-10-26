@@ -276,12 +276,15 @@ function handleImageUpload(event) {
     if (!files.length) return;
 
     if (providerSelect.value === 'groq') {
-    uploadedImages = [files[0]];
+        uploadedImages = [files[0]];
     } else {
-    uploadedImages = Array.from(files);
-  }
+        uploadedImages = Array.from(files);
+    }
     updateImagePreviews();
     updateImageUploadStatus();
+    
+    // Show upload notification
+    showNotification(`${files.length} image${files.length > 1 ? 's' : ''} uploaded successfully!`);
 }
 
 function updateImagePreviews() {

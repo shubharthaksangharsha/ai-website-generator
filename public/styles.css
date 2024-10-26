@@ -503,3 +503,37 @@ footer a:hover::before {
     display: block;
     width: 100%;
 }
+
+/* Add these styles at the end of the file */
+.paste-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #00ffff;
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-family: 'VT323', monospace;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}

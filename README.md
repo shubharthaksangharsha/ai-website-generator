@@ -10,6 +10,9 @@ Generate and modify websites in real-time using cutting-edge AI models!
 - **Real-time Website Generation**: Create websites on-the-fly using AI-powered models.
 - **Multiple AI Providers**: Choose between Google, OpenAI, and Groq for website generation.
 - **Live Preview**: See your generated website instantly in the built-in preview window.
+- **Code Editor**: Edit your generated code directly with syntax highlighting and live preview.
+- **Version Control**: Navigate through different versions of your generated website using arrow keys.
+- **Image Support**: Attach reference images to help AI better understand your requirements.
 - **Easy Modifications**: Tweak and refine your website with simple text prompts.
 - **One-Click Download**: Export your generated website as a ready-to-use ZIP file.
 
@@ -52,17 +55,27 @@ Generate and modify websites in real-time using cutting-edge AI models!
 
 6. Open your browser and visit `http://localhost:3000` to use the AI Website Generator.
 
-## 🎨 Usage
-
 1. **Select AI Provider and Model**: Choose your preferred AI provider and model from the dropdown menus.
 
 2. **Enter Website Description**: In the "WEBSITE DESCRIPTION" box, describe the website you want to create. Be as detailed as possible for best results.
 
-3. **Generate Website**: Click the "Generate Website" button to create your website based on the description.
+3. **Attach Reference Images**: 
+   - Click "Attach images for references..." to upload images
+   - Drag and drop images directly
+   - Paste images from clipboard
+   - Note: Image support is available for OpenAI and Google models only
 
-4. **Preview and Modify**: Use the live preview to see your generated website. If you want to make changes, use the "MODIFY WEBSITE" box to describe the modifications.
+4. **Generate Website**: Click the "Generate Website" button to create your website based on the description and reference images.
 
-5. **Download Website**: Once satisfied, click the "Download Website" button to get a ZIP file containing your generated website files.
+5. **Preview and Edit**:
+   - Toggle between "Preview" and "Code" views
+   - Edit the code directly in the code editor with syntax highlighting
+   - Click the "Execute" button (▶) or use Ctrl+Enter to apply code changes
+   - Use left/right arrow keys to navigate through different versions of your website
+
+6. **Modify Website**: Use the "MODIFY WEBSITE" box to describe modifications or edit the code directly in the code editor.
+
+7. **Download Website**: Once satisfied, click the "Download Website" button to get a ZIP file containing your generated website files.
 
 ## 🛠️ Technologies Used
 
