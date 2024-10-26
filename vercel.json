@@ -1,0 +1,56 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 60,
+        "memory": 1024
+      }
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/generate",
+      "dest": "app.js",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/modify",
+      "dest": "app.js",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/models",
+      "dest": "app.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/",
+      "dest": "public/index.html"
+    },
+    {
+      "src": "/script.js",
+      "dest": "public/script.js"
+    },
+    {
+      "src": "/styles.css",
+      "dest": "public/styles.css"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

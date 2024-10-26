@@ -226,13 +226,20 @@ app.post('/modify', upload.array('images', 5), async (req, res) => {
   const modifyPrompt = `Modify the following website code based on this instruction and the provided images: ${prompt}\n\nCurrent code:\n${currentCode}`;
   handleWebsiteGeneration(req, res, modifyPrompt, provider, model, images);
 });
+const isServerless = process.env.VERCEL == '1';
 
 async function handleWebsiteGeneration(req, res, prompt, provider, model, images = []) {
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive'
-  });
+  if (isServerless){
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+  } else {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    });
+  }
 
   try {
     const stream = await generateWebsiteCode(provider, model, prompt, images);
