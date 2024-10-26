@@ -3,6 +3,8 @@
 
 Generate and modify websites in real-time using cutting-edge AI models!
 
+[**Try it in Vercel** ▲](https://ai-website-generator-eight.vercel.app/)
+
 [**Try it in Gitpod** 🚀](https://gitpod.io/#/https://github.com/shubharthaksangharsha/ai-website-generator/)
 
 ## 🌟 Features
