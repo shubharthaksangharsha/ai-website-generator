@@ -537,3 +537,96 @@ footer a:hover::before {
         opacity: 0;
     }
 }
+
+/* Add this to your existing styles */
+.device-controls {
+    display: flex;
+    gap: 10px;
+    margin-right: 15px;
+}
+
+.device-btn {
+    background: #1a1a1a;
+    color: #00ffff;
+    border: 1px solid #00ffff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: auto;
+    transition: all 0.3s ease;
+}
+
+.device-btn:hover {
+    background: #2a2a2a;
+}
+
+.device-btn.active {
+    background: #00ffff;
+    color: #000;
+}
+
+/* Device frame styles */
+.preview-frame-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+}
+
+.device-controls {
+    display: flex;
+    gap: 10px;
+    margin-left: 15px;
+}
+
+.device-btn {
+    width: auto;
+    padding: 5px 10px;
+    background: #1a1a1a;
+    color: #00ffff;
+    border: 1px solid #00ffff;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.device-btn:hover {
+    background: #2a2a2a;
+}
+
+.device-btn.active {
+    background: #00ffff;
+    color: #000;
+}
+
+.device-frame {
+    transition: all 0.3s ease;
+    background: white;
+    border: 12px solid #333;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.mobile-frame {
+    width: 375px;
+    height: 667px;
+    border-width: 20px 10px;
+}
+
+.tablet-frame {
+    width: 768px;
+    height: 1024px;
+    border-width: 20px;
+}
+
+.desktop-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+}
+

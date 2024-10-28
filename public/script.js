@@ -20,6 +20,13 @@ let uploadedImages = [];
 let versionHistory = [];
 let currentVersionIndex = -1;
 
+// Add these constants at the top with your other constants
+const deviceSizes = {
+    mobile: { width: '375px', height: '667px' },
+    tablet: { width: '768px', height: '1024px' },
+    desktop: { width: '100%', height: '100%' }
+};
+
 async function fetchModels() {
     const response = await fetch('/models');
     models = await response.json();
@@ -129,6 +136,9 @@ function cleanGeneratedCode(code) {
 }
 
 function updatePreview(html) {
+    const previewFrame = document.getElementById('preview-frame');
+    const activeDevice = document.querySelector('.device-btn.active')?.dataset.device || 'desktop';
+
     // Clean up any markdown code block syntax
     html = html.replace(/```html|```css|```javascript|```/g, '');
 
@@ -196,10 +206,19 @@ function updatePreview(html) {
     `;
 
     // Update the iframe content
-    const previewFrame = document.getElementById('preview-frame');
-    previewFrame.srcdoc = previewContent;
+    if (previewFrame) {
+        previewFrame.srcdoc = previewContent;
+        
+        // Maintain the device frame settings
+        if (activeDevice !== 'desktop') {
+            previewFrame.classList.add('device-frame', `${activeDevice}-frame`);
+            const size = deviceSizes[activeDevice];
+            previewFrame.style.width = size.width;
+            previewFrame.style.height = size.height;
+        }
+    }
 
-    // Add this at the end of the function
+    // Update code view
     updateCodeView(html);
 }
 
@@ -331,6 +350,7 @@ referenceImages.addEventListener('change', handleImageUpload);
 
 providerSelect.addEventListener('change', () => {
     const provider = providerSelect.value;
+    const model = modelSelect.value;
     const imageUploadContainer = document.querySelector('.image-upload-container');
     const isSupported = provider === 'google' || provider === 'openai'|| 
     (provider === 'groq' && (model.includes('vision') || model.includes('llava')));
@@ -564,3 +584,72 @@ document.addEventListener('keydown', (e) => {
         executeCode();
     }
 });
+
+// Add this function after your existing initialization code
+function initializeDeviceControls() {
+    const deviceButtons = document.querySelectorAll('.device-btn');
+    const previewContainer = document.querySelector('.preview-container');
+    const previewFrame = document.getElementById('preview-frame');
+    
+    if (!deviceButtons.length || !previewFrame) {
+        console.error('Required elements not found');
+        return;
+    }
+    
+    // Wrap the iframe in a container div if not already wrapped
+    if (!document.querySelector('.preview-frame-container')) {
+        const container = document.createElement('div');
+        container.className = 'preview-frame-container';
+        previewFrame.parentNode.insertBefore(container, previewFrame);
+        container.appendChild(previewFrame);
+    }
+
+    deviceButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const device = button.dataset.device;
+            
+            // Update active button state
+            deviceButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Remove all device frame classes
+            previewFrame.classList.remove('device-frame', 'mobile-frame', 'tablet-frame', 'desktop-frame');
+            
+            if (device !== 'desktop') {
+                previewFrame.classList.add('device-frame', `${device}-frame`);
+            }
+            
+            // Update iframe size
+            const size = deviceSizes[device];
+            previewFrame.style.width = size.width;
+            previewFrame.style.height = size.height;
+        });
+    });
+
+    // Set desktop view as default (safely)
+    const desktopButton = document.querySelector('[data-device="desktop"]');
+    if (desktopButton) {
+        desktopButton.click();
+    }
+}
+
+// Update the DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', () => {
+    // Ensure all required elements exist before initialization
+    const requiredElements = [
+        'preview-frame',
+        'provider-select',
+        'model-select',
+        'code-view'
+    ];
+    
+    const missingElements = requiredElements.filter(id => !document.getElementById(id));
+    if (missingElements.length) {
+        console.error('Missing required elements:', missingElements);
+        return;
+    }
+
+    fetchModels();
+    initializeDeviceControls();
+});
+

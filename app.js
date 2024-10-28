@@ -6,11 +6,19 @@ const dotenv = require('dotenv');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const cors = require('cors');
 
 dotenv.config();
 
 const app = express();
 const port = 3000;
+
+// Add CORS middleware
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://your-domain.vercel.app'] 
+    : ['http://localhost:3000']
+}));
 
 app.use(express.static('public'));
 app.use(express.json());
@@ -26,9 +34,9 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const googleModels = [
-  "gemini-1.5-pro-exp-0801",
   "gemini-1.5-flash-002",
   "gemini-1.5-pro-002",
+  "gemini-1.5-pro-exp-0801",
   "gemini-1.5-flash",
   "gemini-1.5-pro",
   "gemini-1.0-pro"
@@ -57,7 +65,64 @@ const groqModels = [
   "gemma2-9b-it"
 ];
 
-const systemPrompt = "You are an AI assistant specialized in creating websites based on user descriptions. Your task is to generate clean, valid HTML, CSS, and JavaScript code for a website. Respond only with the code needed to create the website, without any explanations or markdown formatting. The code should be ready to be rendered directly in a browser.";
+const systemPrompt = `You are an AI assistant specialized in creating websites based on user descriptions. Your task is to generate clean, valid HTML, CSS, and JavaScript code for a website. Follow this exact structure and formatting:
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Website Title]</title>
+    <style>
+        /* Reset default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Main styles */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+
+        /* Add your custom styles here */
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        [Header Content]
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        [Main Content]
+    </main>
+
+    <!-- Footer Section -->
+    <footer>
+        [Footer Content]
+    </footer>
+
+    <script>
+        // Your JavaScript code here
+    </script>
+</body>
+</html>
+
+Follow these strict formatting rules:
+1. Use 4 spaces for indentation
+2. Place each HTML element on a new line
+3. Add comments for major sections
+4. Format CSS properties with one declaration per line
+5. Include proper spacing around CSS brackets
+6. Use semantic HTML5 elements
+7. Ensure all tags are properly closed
+8. Keep JavaScript clean and well-formatted
+
+Respond only with the formatted code, no explanations or markdown.`;
 
 async function generateWebsiteCode(provider, model, prompt, images = []) {
   switch (provider) {
@@ -165,49 +230,43 @@ async function generateOpenAIWebsiteCode(model, prompt, images = []) {
 }
 
 async function generateGroqWebsiteCode(model, prompt, images = []) {
-  // Check if it's a vision model
   const isVisionModel = model.includes('vision') || model.includes('llava');
   
-  // If it's a vision model and we have images
+  const messages = [
+    { 
+      role: "system", 
+      content: systemPrompt + "\nEnsure to maintain proper code formatting with appropriate line breaks and indentation."
+    }
+  ];
+  
   if (isVisionModel && images.length > 0) {
-    // Groq only supports one image per request, so we'll use the first image
-    const image = images[0];
-    
-    const stream = await groq.chat.completions.create({
-      messages: [
+    messages.push({
+      role: "user",
+      content: [
+        { type: "text", text: prompt },
         {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${image}`
-              }
-            }
-          ]
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${images[0]}`
+          }
         }
-      ],
-      model: model,
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 4096
+      ]
     });
-    
-    return stream;
   } else {
-    // For non-vision models or requests without images, use the original approach
-    const stream = await groq.chat.completions.create({
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: prompt }
-      ],
-      model: model,
-      stream: true,
+    messages.push({ 
+      role: "user", 
+      content: prompt 
     });
-
-    return stream;
   }
+  
+  const stream = await groq.chat.completions.create({
+    messages: messages,
+    model: model,
+    stream: true,
+    temperature: 0.7,
+    max_tokens: 4096
+  });
+  return stream;
 }
 
 function encodeImageToBase64(buffer) {
