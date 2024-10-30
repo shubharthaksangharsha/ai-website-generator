@@ -43,11 +43,13 @@ create_env_file() {
   read -p "Enter your Google API Key: " google_api_key
   read -p "Enter your OpenAI API Key: " openai_api_key
   read -p "Enter your Groq API Key: " groq_api_key
+  read -p "Enter your Anthropic API Key: " $anthropic_api_key
 
   cat <<EOL > .env
 GOOGLE_API_KEY=$google_api_key
 OPENAI_API_KEY=$openai_api_key
 GROQ_API_KEY=$groq_api_key
+ANTHROPIC_API_KEY=$anthropic_api_key
 EOL
 
   echo ".env file created successfully."
