@@ -19,12 +19,16 @@
                     <option value="google">Google</option>
                     <option value="openai">OpenAI</option>
                     <option value="groq">Groq</option>
+                    <option value="claude">Claude</option>
                 </select>
                 <select id="model-select"></select>
             </div>
             <div class="description-box">
                 <h2>WEBSITE DESCRIPTION</h2>
-                <textarea id="ai-prompt" placeholder="Enter your website description here..."></textarea>
+                <div class="prompt-container">
+                    <textarea id="ai-prompt" placeholder="Enter your website description here..."></textarea>
+                    <button id="enhance-prompt-btn" class="enhance-btn" title="Enhance Prompt">✨</button>
+                </div>
                 <div class="image-upload-section">
                     <div class="image-upload-container">
                         <label for="reference-images" class="image-upload-label">
@@ -34,7 +38,7 @@
                                 id="reference-images" 
                                 accept="image/*" 
                                 class="image-upload-input"
-                                data-provider-support="google,openai"
+                                data-provider-support="google,openai,claude"
                                 multiple
                             >
                         </label>
@@ -49,7 +53,29 @@
             
             <div class="modify-box">
                 <h2>MODIFY WEBSITE</h2>
-                <textarea id="modify-prompt" placeholder="Enter modifications here..."></textarea>
+                <div class="prompt-container">
+                    <textarea id="modify-prompt" placeholder="Enter modifications here..."></textarea>
+                    <button id="enhance-modify-prompt-btn" class="enhance-btn" title="Enhance Prompt">✨</button>
+                </div>
+                <div class="image-upload-section">
+                    <div class="image-upload-container">
+                        <label for="modify-reference-images" class="image-upload-label">
+                            Attach images for references...
+                            <input 
+                                type="file" 
+                                id="modify-reference-images" 
+                                accept="image/*" 
+                                class="image-upload-input"
+                                data-provider-support="google,openai"
+                                multiple
+                            >
+                        </label>
+                        <div id="modify-images-preview-container" class="images-grid hidden">
+                            <!-- Image previews will be dynamically added here -->
+                        </div>
+                        <p id="modify-image-status" class="image-status"></p>
+                    </div>
+                </div>
                 <button id="modify-btn">Modify Website</button>
             </div>
             <div class="download-box">

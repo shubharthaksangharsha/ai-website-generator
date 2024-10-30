@@ -13,6 +13,12 @@ const imageStatus = document.getElementById('image-status');
 const previewToggle = document.getElementById('preview-toggle');
 const codeToggle = document.getElementById('code-toggle');
 const codeView = document.getElementById('code-view');
+const enhancePromptBtn = document.getElementById('enhance-prompt-btn');
+const enhanceModifyPromptBtn = document.getElementById('enhance-modify-prompt-btn');
+const modifyReferenceImages = document.getElementById('modify-reference-images');
+const modifyImagesPreviewContainer = document.getElementById('modify-images-preview-container');
+const modifyImageStatus = document.getElementById('modify-image-status');
+let modifyUploadedImages = [];
 
 let currentWebsiteCode = '';
 let models = [];
@@ -52,6 +58,62 @@ providerSelect.addEventListener('change', updateModelSelect);
 
 fetchModels();
 
+async function enhancePrompt(promptText, button) {
+    if (!promptText.trim()) {
+        showNotification('Please enter a prompt first', 'error');
+        return;
+    }
+
+    // Show loading state
+    button.classList.add('loading');
+    button.textContent = '⌛';
+
+    try {
+        const response = await fetch('/enhance-prompt', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                prompt: promptText,
+                provider: providerSelect.value,
+                model: modelSelect.value
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        const data = await response.json();
+        
+        if (!data.enhancedPrompt) {
+            throw new Error('No enhanced prompt received');
+        }
+
+        // Update the corresponding textarea
+        const textarea = button.parentElement.querySelector('textarea');
+        textarea.value = data.enhancedPrompt;
+        
+        // Show success notification
+        showNotification('Prompt enhanced successfully!');
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification(error.message || 'Failed to enhance prompt', 'error');
+    } finally {
+        // Reset button state
+        button.classList.remove('loading');
+        button.textContent = '✨';
+    }
+}
+enhancePromptBtn.addEventListener('click', () => {
+    enhancePrompt(aiPrompt.value, enhancePromptBtn);
+});
+
+enhanceModifyPromptBtn.addEventListener('click', () => {
+    enhancePrompt(modifyPrompt.value, enhanceModifyPromptBtn);
+});
+
 async function generateWebsite(prompt, isModify = false) {
     loading.classList.remove('hidden');
     generateBtn.disabled = true;
@@ -64,11 +126,14 @@ async function generateWebsite(prompt, isModify = false) {
 
     if (isModify) {
         formData.append('currentCode', currentWebsiteCode);
+        modifyUploadedImages.forEach(file => {
+            formData.append('modifyImages', file);
+        });
+    } else {
+        uploadedImages.forEach(file => {
+            formData.append('images', file);
+        });
     }
-
-    uploadedImages.forEach(file => {
-        formData.append('images', file);
-    });
 
     try {
         const response = await fetch(isModify ? '/modify' : '/generate', {
@@ -351,23 +416,35 @@ referenceImages.addEventListener('change', handleImageUpload);
 providerSelect.addEventListener('change', () => {
     const provider = providerSelect.value;
     const model = modelSelect.value;
-    const imageUploadContainer = document.querySelector('.image-upload-container');
-    const isSupported = provider === 'google' || provider === 'openai'|| 
-    (provider === 'groq' && (model.includes('vision') || model.includes('llava')));
-  
+    const imageUploadContainers = document.querySelectorAll('.image-upload-container');
+    const isSupported = provider === 'google' || provider === 'openai' || provider === 'claude' || 
+        (provider === 'groq' && (model.includes('vision') || model.includes('llava')));
     
-    imageUploadContainer.classList.toggle('disabled', !isSupported);
-    referenceImages.disabled = !isSupported;
+    imageUploadContainers.forEach(container => {
+        container.classList.toggle('disabled', !isSupported);
+        const input = container.querySelector('input[type="file"]');
+        if (input) input.disabled = !isSupported;
+    });
+
     if (provider === 'groq') {
-        referenceImages.setAttribute('multiple', '');
+        [referenceImages, modifyReferenceImages].forEach(input => {
+            input.removeAttribute('multiple');
+        });
         if (uploadedImages.length > 1) {
-          uploadedImages = [uploadedImages[0]];
-          updateImagePreviews();
-          updateImageUploadStatus();
+            uploadedImages = [uploadedImages[0]];
+            updateImagePreviews();
+            updateImageUploadStatus();
         }
-      } else {
-        referenceImages.setAttribute('multiple', 'multiple');
-      }
+        if (modifyUploadedImages.length > 1) {
+            modifyUploadedImages = [modifyUploadedImages[0]];
+            updateModifyImagePreviews();
+            updateModifyImageUploadStatus();
+        }
+    } else {
+        [referenceImages, modifyReferenceImages].forEach(input => {
+            input.setAttribute('multiple', 'multiple');
+        });
+    }
 });
 
 // Add a model change event listener to handle Groq vision models
@@ -391,10 +468,12 @@ modelSelect.addEventListener('change', () => {
 
 // Add event listener for clipboard paste
 document.addEventListener('paste', async (event) => {
-    // Check if image upload is supported for current provider
+    const activeElement = document.activeElement;
+    const isModifySection = activeElement.closest('.modify-box') !== null;
+    
     const provider = providerSelect.value;
     const model = modelSelect.value;
-    const isSupported = provider === 'google' || provider === 'openai' || 
+    const isSupported = provider === 'google' || provider === 'openai' || provider === 'claude' || 
         (provider === 'groq' && (model.includes('vision') || model.includes('llava')));
     
     if (!isSupported) return;
@@ -402,7 +481,6 @@ document.addEventListener('paste', async (event) => {
     const items = event.clipboardData.items;
     let imageFile = null;
 
-    // Look for an image in the clipboard data
     for (let i = 0; i < items.length; i++) {
         if (items[i].type.indexOf('image') !== -1) {
             imageFile = items[i].getAsFile();
@@ -411,26 +489,19 @@ document.addEventListener('paste', async (event) => {
     }
 
     if (imageFile) {
-        // Create a File object with a proper name
         const file = new File([imageFile], `pasted-image-${Date.now()}.png`, {
-            type: imageFile.type
+            type: 'image/png'
         });
 
-        // Handle based on provider
-        if (provider === 'groq') {
-            // Groq only supports one image
-            uploadedImages = [file];
+        if (isModifySection) {
+            modifyUploadedImages.push(file);
+            updateModifyImagePreviews();
+            updateModifyImageUploadStatus();
         } else {
-            // Other providers support multiple images
             uploadedImages.push(file);
+            updateImagePreviews();
+            updateImageUploadStatus();
         }
-
-        // Update UI
-        updateImagePreviews();
-        updateImageUploadStatus();
-
-        // Show a notification
-        showNotification('Image pasted successfully!');
     }
 });
 
@@ -653,3 +724,105 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDeviceControls();
 });
 
+function handleModifyImageUpload(event) {
+    const files = event.target.files;
+    if (!files.length) return;
+
+    if (providerSelect.value === 'groq') {
+        modifyUploadedImages = [files[0]];
+    } else {
+        modifyUploadedImages = Array.from(files);
+    }
+    updateModifyImagePreviews();
+    updateModifyImageUploadStatus();
+    
+    showNotification(`${files.length} image${files.length > 1 ? 's' : ''} uploaded successfully!`);
+}
+
+function updateModifyImagePreviews() {
+    modifyImagesPreviewContainer.innerHTML = '';
+    
+    modifyUploadedImages.forEach((file, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-preview-wrapper';
+
+        const img = document.createElement('img');
+        img.className = 'image-preview-item';
+        img.src = URL.createObjectURL(file);
+        img.alt = `Preview ${index + 1}`;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-image-btn';
+        removeBtn.innerHTML = '×';
+        removeBtn.onclick = () => removeModifyImage(index);
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(removeBtn);
+        modifyImagesPreviewContainer.appendChild(wrapper);
+    });
+
+    modifyImagesPreviewContainer.classList.toggle('hidden', modifyUploadedImages.length === 0);
+}
+
+function removeModifyImage(index) {
+    modifyUploadedImages.splice(index, 1);
+    updateModifyImagePreviews();
+    updateModifyImageUploadStatus();
+}
+
+function updateModifyImageUploadStatus() {
+    const count = modifyUploadedImages.length;
+    modifyImageStatus.textContent = count ? `${count} image${count > 1 ? 's' : ''} selected` : '';
+}
+
+modifyReferenceImages.addEventListener('change', handleModifyImageUpload);
+
+function updateImageUploadVisibility() {
+    const provider = providerSelect.value;
+    const imageUploadSection = document.querySelector('.image-upload-section');
+    const supportedProviders = referenceImages.dataset.providerSupport.split(',');
+    
+    if (supportedProviders.includes(provider)) {
+        imageUploadSection.classList.remove('hidden');
+    } else {
+        imageUploadSection.classList.add('hidden');
+        // Clear any existing images when switching to unsupported provider
+        clearImagePreviews();
+    }
+}
+
+// Add event listener for provider change
+providerSelect.addEventListener('change', updateImageUploadVisibility);
+
+// Call initially to set correct visibility
+updateImageUploadVisibility();
+
+function clearImagePreviews() {
+    imagesPreviewContainer.innerHTML = '';
+    imagesPreviewContainer.classList.add('hidden');
+    imageStatus.textContent = '';
+    referenceImages.value = '';
+}
+
+function updateImagePreview(files) {
+    imagesPreviewContainer.innerHTML = '';
+    if (files.length > 0) {
+        imagesPreviewContainer.classList.remove('hidden');
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.createElement('div');
+                preview.className = 'image-preview';
+                preview.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview">
+                    <button class="remove-image" title="Remove image">×</button>
+                `;
+                imagesPreviewContainer.appendChild(preview);
+            };
+            reader.readAsDataURL(file);
+        });
+        imageStatus.textContent = `${files.length} image(s) selected`;
+    } else {
+        clearImagePreviews();
+    }
+}

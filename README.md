@@ -10,7 +10,7 @@ Generate and modify websites in real-time using cutting-edge AI models!
 ## 🌟 Features
 
 - **Real-time Website Generation**: Create websites on-the-fly using AI-powered models.
-- **Multiple AI Providers**: Choose between Google, OpenAI, and Groq for website generation.
+- **Multiple AI Providers**: Choose between Claude,Google, OpenAI, and Groq for website generation.
 - **Live Preview**: See your generated website instantly in the built-in preview window.
 - **Code Editor**: Edit your generated code directly with syntax highlighting and live preview.
 - **Version Control**: Navigate through different versions of your generated website using arrow keys.
@@ -46,6 +46,7 @@ Generate and modify websites in real-time using cutting-edge AI models!
 4. Create a `.env` file in the root directory and add your API keys:
    ```
    GOOGLE_API_KEY=your_google_api_key
+   ANTHROPIC_API_KEY=your_claude_api_key
    OPENAI_API_KEY=your_openai_api_key
    GROQ_API_KEY=your_groq_api_key
    ```
@@ -65,7 +66,7 @@ Generate and modify websites in real-time using cutting-edge AI models!
    - Click "Attach images for references..." to upload images
    - Drag and drop images directly
    - Paste images from clipboard
-   - Note: Image support is available for OpenAI and Google models only
+   
 
 4. **Generate Website**: Click the "Generate Website" button to create your website based on the description and reference images.
 
@@ -101,6 +102,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 - [Google Generative AI](https://ai.google.dev/)
 - [OpenAI](https://openai.com/)
 - [Groq](https://groq.com/)
+- [Anthropic](https://www.anthropic.com/)
 - All the amazing open-source libraries used in this project
 
 ---

@@ -7,6 +7,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const Anthropic = require('@anthropic-ai/sdk');
 
 dotenv.config();
 
@@ -25,13 +26,20 @@ app.use(express.json());
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Not an image! Please upload an image.'));
+    }
+  }
 });
 
 // Initialize AI providers
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const googleModels = [
   "gemini-1.5-flash-002",
@@ -63,6 +71,14 @@ const groqModels = [
   "mixtral-8x7b-32768",
   "gemma-7b-it",
   "gemma2-9b-it"
+];
+
+const claudeModels = [
+  "claude-3-opus-20240229",
+  "claude-3-sonnet-20240229",
+  "claude-3-haiku-20240307",
+  "claude-2.1",
+  "claude-2.0"
 ];
 
 const systemPrompt = `You are an AI assistant specialized in creating websites based on user descriptions. Your task is to generate clean, valid HTML, CSS, and JavaScript code for a website. Follow this exact structure and formatting:
@@ -124,6 +140,84 @@ Follow these strict formatting rules:
 
 Respond only with the formatted code, no explanations or markdown.`;
 
+
+app.post('/enhance-prompt', async (req, res) => {
+    try {
+        const { prompt, provider, model } = req.body;
+
+        if (!prompt || !provider || !model) {
+            throw new Error('Missing required parameters');
+        }
+
+        const systemPrompt = `As an AI assistant specializing in website creation, enhance this website description to be more detailed and specific. Focus on:
+- Visual design elements (colors, typography, layout)
+- User interface components
+- Responsive design considerations
+- Functionality and features
+- User experience aspects
+Keep the enhanced prompt clear and structured.`;
+
+        let enhancedPrompt;
+
+        switch (provider) {
+            case 'google':
+                const googleModel = genAI.getGenerativeModel({ model });
+                const result = await googleModel.generateContent({
+                    contents: [{ role: "user", parts: [{ text: `${systemPrompt}\n\nOriginal prompt: ${prompt}` }]}]
+                });
+                enhancedPrompt = result.response.text();
+                break;
+
+            case 'openai':
+                const completion = await openai.chat.completions.create({
+                    model,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: prompt }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 500
+                });
+                enhancedPrompt = completion.choices[0].message.content;
+                break;
+
+            case 'groq':
+                const groqResponse = await groq.chat.completions.create({
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: prompt }
+                    ],
+                    model,
+                    temperature: 0.7,
+                    max_tokens: 500
+                });
+                enhancedPrompt = groqResponse.choices[0].message.content;
+                break;
+
+            case 'claude':
+                const claudeResponse = await anthropic.messages.create({
+                    model: model,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: prompt }
+                    ],
+                    max_tokens: 4096,
+                    temperature: 0.7
+                });
+                enhancedPrompt = claudeResponse.content[0].text;
+                break;
+
+            default:
+                throw new Error('Invalid provider');
+        }
+
+        res.json({ enhancedPrompt: enhancedPrompt.trim() });
+    } catch (error) {
+        console.error('Error enhancing prompt:', error);
+        res.status(500).json({ error: error.message || 'Failed to enhance prompt' });
+    }
+});
+
 async function generateWebsiteCode(provider, model, prompt, images = []) {
   switch (provider) {
     case 'google':
@@ -132,6 +226,8 @@ async function generateWebsiteCode(provider, model, prompt, images = []) {
       return generateOpenAIWebsiteCode(model, prompt, images);
     case 'groq':
       return generateGroqWebsiteCode(model, prompt, images);
+    case 'claude':
+      return generateClaudeWebsiteCode(model, prompt, images);
     default:
       throw new Error('Invalid provider');
   }
@@ -273,17 +369,27 @@ function encodeImageToBase64(buffer) {
   return buffer.toString('base64');
 }
 
-app.post('/generate', upload.array('images', 5), async (req, res) => {
-  const { prompt, provider, model } = req.body;
-  const images = req.files ? req.files.map(file => encodeImageToBase64(file.buffer)) : [];
-  handleWebsiteGeneration(req, res, prompt, provider, model, images);
+app.post('/generate', upload.array('images', 10), async (req, res) => {
+  try {
+    const { prompt, provider, model } = req.body;
+    const images = req.files?.map(file => encodeImageToBase64(file.buffer)) || [];
+    handleWebsiteGeneration(req, res, prompt, provider, model, images);
+  } catch (error) {
+    console.error('Error in generate:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-app.post('/modify', upload.array('images', 5), async (req, res) => {
-  const { prompt, currentCode, provider, model } = req.body;
-  const images = req.files ? req.files.map(file => encodeImageToBase64(file.buffer)) : [];
-  const modifyPrompt = `Modify the following website code based on this instruction and the provided images: ${prompt}\n\nCurrent code:\n${currentCode}`;
-  handleWebsiteGeneration(req, res, modifyPrompt, provider, model, images);
+app.post('/modify', upload.array('modifyImages', 10), async (req, res) => {
+  try {
+    const { prompt, currentCode, provider, model } = req.body;
+    const images = req.files?.map(file => encodeImageToBase64(file.buffer)) || [];
+    const modifyPrompt = `Modify the following website code based on this instruction and the provided images: ${prompt}\n\nCurrent code:\n${currentCode}`;
+    handleWebsiteGeneration(req, res, modifyPrompt, provider, model, images);
+  } catch (error) {
+    console.error('Error in modify:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 const isServerless = process.env.VERCEL == '1';
 
@@ -316,6 +422,10 @@ async function handleWebsiteGeneration(req, res, prompt, provider, model, images
       for await (const chunk of stream) {
         res.write(`data: ${JSON.stringify({ text: chunk.choices[0]?.delta?.content || '' })}\n\n`);
       }
+    } else if (provider === 'claude') {
+      for await (const chunk of stream) {
+        res.write(`data: ${JSON.stringify({ text: chunk.delta?.text || '' })}\n\n`);
+      }
     }
   } catch (error) {
     console.error('Error:', error);
@@ -330,10 +440,54 @@ app.get('/models', (req, res) => {
   res.json({
     google: googleModels,
     openai: openAIModels,
-    groq: groqModels
+    groq: groqModels,
+    claude: claudeModels
   });
 });
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+async function generateClaudeWebsiteCode(model, prompt, images = []) {
+  const messages = [
+    { 
+      role: "system", 
+      content: systemPrompt 
+    }
+  ];
+  
+  if (images && images.length > 0) {
+    messages.push({
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: prompt
+        },
+        ...images.map(img => ({
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: "image/jpeg",
+            data: img
+          }
+        }))
+      ]
+    });
+  } else {
+    messages.push({
+      role: "user",
+      content: prompt
+    });
+  }
+
+  const stream = await anthropic.messages.create({
+    model: model,
+    messages: messages,
+    max_tokens: 4096,
+    stream: true
+  });
+
+  return stream;
+}

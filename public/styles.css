@@ -324,7 +324,11 @@ footer a:hover::before {
     justify-content: center;
     font-size: 16px;
     padding: 0;
-    z-index: 1;
+    transition: background-color 0.2s ease;
+}
+
+.remove-image-btn:hover {
+    background-color: #cc0000;
 }
 
 .image-count-badge {
@@ -630,3 +634,65 @@ footer a:hover::before {
     border-radius: 0;
 }
 
+
+.prompt-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+textarea {
+    width: calc(100% - 50px); /* Adjust width to make room for button */
+    min-height: 150px;
+    background-color: transparent;
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    padding: 10px;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    resize: vertical;
+}
+
+/* Style for the placeholder text */
+textarea::placeholder {
+    color: rgba(0, 255, 0, 0.5); /* Semi-transparent matrix green for placeholder */
+}
+
+/* For Firefox */
+textarea::-moz-placeholder {
+    color: rgba(0, 255, 0, 0.5);
+    opacity: 1;
+}
+
+/* For Chrome/Safari/Edge */
+textarea::-webkit-input-placeholder {
+    color: rgba(0, 255, 0, 0.5);
+}
+
+.enhance-btn {
+    position: static; /* Change from absolute to static positioning */
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    background-color: transparent;
+    border: 1px solid #00ffff;
+    color: #00ffff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.enhance-btn:hover {
+    background-color: rgba(0, 255, 255, 0.1);
+}
+
+.enhance-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}

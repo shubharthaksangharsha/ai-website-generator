@@ -15,6 +15,12 @@
     }
   ],
   "routes": [
+
+    {
+      "src": "/enhance-prompt",
+      "methods": ["POST"],
+      "dest": "app.js"
+    },
     {
       "src": "/generate",
       "dest": "app.js",
