@@ -74,11 +74,13 @@ const groqModels = [
 ];
 
 const claudeModels = [
+  "claude-3-5-sonnet-20241022",
   "claude-3-opus-20240229",
   "claude-3-sonnet-20240229",
   "claude-3-haiku-20240307",
   "claude-2.1",
-  "claude-2.0"
+  "claude-2.0",
+  "claude-instant-1.2"
 ];
 
 const systemPrompt = `You are an AI assistant specialized in creating websites based on user descriptions. Your task is to generate clean, valid HTML, CSS, and JavaScript code for a website. Follow this exact structure and formatting:
