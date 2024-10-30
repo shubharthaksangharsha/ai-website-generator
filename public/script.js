@@ -18,6 +18,8 @@ const enhanceModifyPromptBtn = document.getElementById('enhance-modify-prompt-bt
 const modifyReferenceImages = document.getElementById('modify-reference-images');
 const modifyImagesPreviewContainer = document.getElementById('modify-images-preview-container');
 const modifyImageStatus = document.getElementById('modify-image-status');
+const importProjectBtn = document.getElementById('import-project-btn');
+const projectFilesInput = document.getElementById('project-files');
 let modifyUploadedImages = [];
 
 let currentWebsiteCode = '';
@@ -826,3 +828,77 @@ function updateImagePreview(files) {
         clearImagePreviews();
     }
 }
+
+async function handleProjectImport(event) {
+    const files = Array.from(event.target.files).filter(file => 
+        file.name.endsWith('.html') || 
+        file.name.endsWith('.css') || 
+        file.name.endsWith('.js')
+    );
+
+    if (!files.length) {
+        showNotification('No valid files found in directory', 'error');
+        return;
+    }
+
+    let htmlContent = '';
+    let cssContent = '';
+    let jsContent = '';
+
+    // Read all files
+    for (const file of files) {
+        const content = await file.text();
+        
+        if (file.name.endsWith('.html')) {
+            // Extract body content if it exists
+            const bodyMatch = content.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            htmlContent = bodyMatch ? bodyMatch[1].trim() : content;
+        } else if (file.name.endsWith('.css')) {
+            cssContent += content + '\n';
+        } else if (file.name.endsWith('.js')) {
+            jsContent += content + '\n';
+        }
+    }
+
+    // Construct the combined code
+    const combinedCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imported Project</title>
+    <style>
+        ${cssContent}
+    </style>
+</head>
+<body>
+    ${htmlContent}
+    <script>
+        ${jsContent}
+    </script>
+</body>
+</html>`;
+
+    // Update the preview with the imported code
+    currentWebsiteCode = combinedCode;
+    updatePreview(combinedCode);
+    
+    // Add to version history
+    versionHistory.push({
+        code: combinedCode,
+        timestamp: new Date(),
+        prompt: 'Imported Project'
+    });
+    currentVersionIndex = versionHistory.length - 1;
+    updateVersionNavigation();
+    
+    // Show success notification
+    showNotification(`Successfully imported ${files.length} files from directory!`);
+}
+
+// Update the event listener
+importProjectBtn.addEventListener('click', () => {
+    projectFilesInput.click();
+});
+
+projectFilesInput.addEventListener('change', handleProjectImport);

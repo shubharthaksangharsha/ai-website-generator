@@ -696,3 +696,38 @@ textarea::-webkit-input-placeholder {
     pointer-events: none;
     opacity: 0.7;
 }
+.button-group.vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.button-group.vertical button {
+    width: 40px;
+    height: 40px;
+}
+
+.import-btn {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    background-color: transparent;
+    border: 1px solid #00ffff;
+    color: #00ffff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.import-btn:hover {
+    background-color: rgba(0, 255, 255, 0.1);
+}
+
+input[type="file"][webkitdirectory] {
+    display: none;
+}
