@@ -93,9 +93,12 @@ async function enhancePrompt(promptText, button) {
             throw new Error('No enhanced prompt received');
         }
 
-        // Update the corresponding textarea
-        const textarea = button.parentElement.querySelector('textarea');
-        textarea.value = data.enhancedPrompt;
+        // Update the corresponding textarea based on which button was clicked
+        if (button.id === 'enhance-prompt-btn') {
+            aiPrompt.value = data.enhancedPrompt;
+        } else if (button.id === 'enhance-modify-prompt-btn') {
+            modifyPrompt.value = data.enhancedPrompt;
+        }
         
         // Show success notification
         showNotification('Prompt enhanced successfully!');
