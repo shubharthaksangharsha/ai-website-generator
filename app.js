@@ -42,7 +42,9 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const googleModels = [
+  "gemini-exp-1114",
   "gemini-1.5-flash-002",
+  "gemini-1.5-flash-8b", 
   "gemini-1.5-pro-002",
   "gemini-1.5-pro-exp-0801",
   "gemini-1.5-flash",
@@ -238,6 +240,10 @@ async function generateWebsiteCode(provider, model, prompt, images = []) {
 async function generateGoogleWebsiteCode(model, prompt, images = []) {
   const googleModel = genAI.getGenerativeModel({ 
     model: model,
+    maxOutputTokens: model.includes('flash-8b') ? 8192 : 
+                      model.includes('flash') ? 8192 :
+                      model.includes('pro') ? 8192 : 4096,
+    temperature: 0.7,
     safetySettings: [
       {
         category: HarmCategory.HARM_CATEGORY_HARASSMENT,
