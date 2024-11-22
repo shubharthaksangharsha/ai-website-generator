@@ -45,6 +45,7 @@ const googleModels = [
   "gemini-1.5-flash-002",
   "gemini-1.5-flash",
   "gemini-1.5-flash-8b", 
+  "gemini-exp-1114",
   "gemini-exp-1121",
   "gemini-1.5-pro-002",
   "gemini-1.5-pro-exp-0801",
