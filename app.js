@@ -45,7 +45,6 @@ const googleModels = [
   "gemini-1.5-flash-002",
   "gemini-1.5-flash",
   "gemini-1.5-flash-8b", 
-  "gemini-exp-1114",
   "gemini-exp-1121",
   "gemini-1.5-pro-002",
   "gemini-1.5-pro-exp-0801",
@@ -242,10 +241,9 @@ async function generateGoogleWebsiteCode(model, prompt, images = []) {
   const googleModel = genAI.getGenerativeModel({ 
     model: model,
     maxOutputTokens: model.includes('flash-8b') ? 8192 : 
-                    model.includes('flash') ? 8192 :
-                    model.includes('pro') ? 8192 : 
-                    model.includes('exp') ? 8192 : 
-                    4096,  // default for other models
+                      model.includes('flash') ? 8192 :
+                      model.includes('pro') ? 8192 : 
+                      model.includes('exp') ? 8192 : 4096,
     temperature: 0.7,
     safetySettings: [
       {
@@ -280,31 +278,6 @@ async function generateGoogleWebsiteCode(model, prompt, images = []) {
     });
   }
 
-  if (process.env.VERCEL) {
-    const result = await googleModel.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [{text: systemPrompt}]
-        },
-        {
-          role: "model",
-          parts: [{text: "Understood. I will provide the website code."}]
-        },
-        {
-          role: "user",
-          parts: parts
-        }
-      ]
-    });
-    
-    return {
-      stream: (async function* () {
-        yield result.response;
-      })()
-    };
-  }
-
   const chat = googleModel.startChat({
     history: [
       {
@@ -328,7 +301,7 @@ async function generateGoogleWebsiteCode(model, prompt, images = []) {
   });
 
   const result = await chat.sendMessageStream(parts);
-  return result;
+  return result.stream;
 }
 
 async function generateOpenAIWebsiteCode(model, prompt, images = []) {
@@ -430,31 +403,25 @@ app.post('/modify', upload.array('modifyImages', 10), async (req, res) => {
 const isServerless = process.env.VERCEL == '1';
 
 async function handleWebsiteGeneration(req, res, prompt, provider, model, images = []) {
-  const headers = {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive'
-  };
-
-  if (isServerless) {
-    for (const [key, value] of Object.entries(headers)) {
-      res.setHeader(key, value);
-    }
+  if (isServerless){
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
   } else {
-    res.writeHead(200, headers);
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    });
   }
 
   try {
     const stream = await generateWebsiteCode(provider, model, prompt, images);
 
     if (provider === 'google') {
-      for await (const chunk of stream.stream) {
-        const chunkText = isServerless ? chunk.text : chunk.text();
+      for await (const chunk of stream) {
+        const chunkText = chunk.text();
         res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
-        
-        if (isServerless) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
       }
     } else if (provider === 'openai') {
       for await (const chunk of stream) {
@@ -471,7 +438,7 @@ async function handleWebsiteGeneration(req, res, prompt, provider, model, images
     }
   } catch (error) {
     console.error('Error:', error);
-    res.write(`data: ${JSON.stringify({ error: error.message || 'An error occurred' })}\n\n`);
+    res.write(`data: ${JSON.stringify({ error: 'An error occurred' })}\n\n`);
   }
 
   res.write('event: close\n\n');
