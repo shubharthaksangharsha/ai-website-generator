@@ -15,7 +15,6 @@
     }
   ],
   "routes": [
-
     {
       "src": "/enhance-prompt",
       "methods": ["POST"],
