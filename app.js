@@ -246,6 +246,15 @@ async function generateGoogleWebsiteCode(model, prompt, images = []) {
                       model.includes('pro') ? 8192 : 
                       model.includes('exp') ? 8192 : 4096,
     temperature: 0.7,
+    generationConfig: {
+      maxOutputTokens: model.includes('flash-8b') ? 8192 : 
+                      model.includes('flash') ? 8192 :
+                      model.includes('pro') ? 8192 : 
+                      model.includes('exp') ? 8192 : 4096,
+      temperature: 0.7,
+      topP: 0.8,
+      topK: 40,
+    },
     safetySettings: [
       {
         category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -265,7 +274,7 @@ async function generateGoogleWebsiteCode(model, prompt, images = []) {
       },
     ],
   });
-
+  const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout waiting for response')), 300000));
   const parts = [{ text: prompt }];
   
   if (images && images.length > 0) {
@@ -278,9 +287,9 @@ async function generateGoogleWebsiteCode(model, prompt, images = []) {
       });
     });
   }
-
-  const chat = googleModel.startChat({
-    history: [
+  try {
+    const chat = googleModel.startChat({
+      history: [
       {
         role: "user", 
         parts: [{text: systemPrompt}],
@@ -301,9 +310,20 @@ async function generateGoogleWebsiteCode(model, prompt, images = []) {
     ],
   });
 
-  const result = await chat.sendMessageStream(parts);
-  return result.stream;
-}
+  const result = await Promise.race([
+    chat.sendMessageStream(parts),
+    timeoutPromise
+    ]);
+    return result.stream;
+  } catch (error) {
+    if (error.message === 'Timeout waiting for response') {
+      throw new Error('The request took too long to complete. Please try again with a shorter prompt or different model.');
+    } else {
+      console.error('Error generating website code:', error);
+      throw error;
+    }
+  }
+} 
 
 async function generateOpenAIWebsiteCode(model, prompt, images = []) {
   const messages = [
@@ -404,7 +424,7 @@ app.post('/modify', upload.array('modifyImages', 10), async (req, res) => {
 const isServerless = process.env.VERCEL == '1';
 
 async function handleWebsiteGeneration(req, res, prompt, provider, model, images = []) {
-  if (isServerless){
+  if (isServerless) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -423,6 +443,7 @@ async function handleWebsiteGeneration(req, res, prompt, provider, model, images
       for await (const chunk of stream) {
         const chunkText = chunk.text();
         res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
+        if (res.flush) res.flush();
       }
     } else if (provider === 'openai') {
       for await (const chunk of stream) {
@@ -439,7 +460,7 @@ async function handleWebsiteGeneration(req, res, prompt, provider, model, images
     }
   } catch (error) {
     console.error('Error:', error);
-    res.write(`data: ${JSON.stringify({ error: 'An error occurred' })}\n\n`);
+    res.write(`data: ${JSON.stringify({ error: error.message || 'An error occurred' })}\n\n`);
   }
 
   res.write('event: close\n\n');
