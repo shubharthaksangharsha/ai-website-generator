@@ -42,11 +42,15 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const googleModels = [
+  "gemini-2.5-pro-exp-03-25",
+  "gemini-2.0-flash-thinking-exp-01-21", 
+  "gemini-2.0-flash-exp",
   "gemini-1.5-flash-002",
   "gemini-1.5-flash",
   "gemini-1.5-flash-8b", 
-  "gemini-exp-1114",
+  "gemini-exp-1206",
   "gemini-exp-1121",
+  "gemini-exp-1114",
   "gemini-1.5-pro-002",
   "gemini-1.5-pro-exp-0801",
   "gemini-1.5-pro",
@@ -61,6 +65,11 @@ const openAIModels = [
 ];
 
 const groqModels = [
+  "deepseek-r1-distill-qwen-32b",
+  "deepseek-r1-distill-llama-70b-specdec",
+  "deepseek-r1-distill-llama-70b",
+  "llama-3.3-70b-versatile",
+  "llama-3.3-70b-specdec", 
   "llama-3.2-90b-vision-preview",
   "llama-3.2-11b-vision-preview",
   "llava-v1.5-7b-4096-preview",
@@ -142,7 +151,7 @@ Follow these strict formatting rules:
 6. Use semantic HTML5 elements
 7. Ensure all tags are properly closed
 8. Keep JavaScript clean and well-formatted
-
+9. MAKE SURE NOT TO SPLIT ANY THINKING OR EXPLANATIONS OR MARKDOWN. JUST PURE FORMATTED CODE.
 Respond only with the formatted code, no explanations or markdown.`;
 
 
@@ -194,7 +203,7 @@ Keep the enhanced prompt clear and structured.`;
                     ],
                     model,
                     temperature: 0.7,
-                    max_tokens: 500
+                    max_tokens: 32768
                 });
                 enhancedPrompt = groqResponse.choices[0].message.content;
                 break;
@@ -243,15 +252,16 @@ async function generateGoogleWebsiteCode(model, prompt, images = []) {
     model: model,
     maxOutputTokens: model.includes('flash-8b') ? 8192 : 
                       model.includes('flash') ? 8192 :
+                      model.includes('thinking-exp') ? 65536 :
                       model.includes('pro') ? 8192 : 
                       model.includes('exp') ? 8192 : 4096,
-    temperature: 0.7,
+    temperature: 0.0,
     generationConfig: {
       maxOutputTokens: model.includes('flash-8b') ? 8192 : 
                       model.includes('flash') ? 8192 :
                       model.includes('pro') ? 8192 : 
                       model.includes('exp') ? 8192 : 4096,
-      temperature: 0.7,
+      temperature: 0.0,
       topP: 0.8,
       topK: 40,
     },
@@ -356,12 +366,13 @@ async function generateOpenAIWebsiteCode(model, prompt, images = []) {
 }
 
 async function generateGroqWebsiteCode(model, prompt, images = []) {
+  let max_tokens = 32768;
   const isVisionModel = model.includes('vision') || model.includes('llava');
   
   const messages = [
     { 
       role: "system", 
-      content: systemPrompt + "\nEnsure to maintain proper code formatting with appropriate line breaks and indentation."
+      content: systemPrompt + "\nEnsure to maintain proper code formatting with appropriate line breaks and indentation. Make sure <style> and <script> part comes within inside the <html>. Add proper indentation for HTML, CSS and JavaScript. Add proper spaces and line breaks for readability."
     }
   ];
   
@@ -384,13 +395,15 @@ async function generateGroqWebsiteCode(model, prompt, images = []) {
       content: prompt 
     });
   }
-  
+  if (model.includes('specdec')) {
+    max_tokens = 8192;
+  }
   const stream = await groq.chat.completions.create({
     messages: messages,
     model: model,
     stream: true,
-    temperature: 0.7,
-    max_tokens: 4096
+    temperature: 0.0,
+    max_tokens: max_tokens,
   });
   return stream;
 }
