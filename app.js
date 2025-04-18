@@ -17,10 +17,9 @@ const port = 3000;
 // Add CORS middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.vercel.app'] 
+    ? ['http://localhost:3000'] // Or your intended production origin
     : ['http://localhost:3000']
 }));
-
 app.use(express.static('public'));
 app.use(express.json());
 
@@ -42,6 +41,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const googleModels = [
+  "gemini-2.5-flash-preview-04-17",
   "gemini-2.5-pro-exp-03-25",
   "gemini-2.0-flash-thinking-exp-01-21", 
   "gemini-2.0-flash-exp",
@@ -434,20 +434,15 @@ app.post('/modify', upload.array('modifyImages', 10), async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-const isServerless = process.env.VERCEL == '1';
+
 
 async function handleWebsiteGeneration(req, res, prompt, provider, model, images = []) {
-  if (isServerless) {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-  } else {
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive'
-    });
-  }
+  res.writeHead(200, { // Always set headers directly
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive'
+  });
+
 
   try {
     const stream = await generateWebsiteCode(provider, model, prompt, images);
